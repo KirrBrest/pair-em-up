@@ -168,4 +168,143 @@ export class GameLogic {
     this.stopTimer();
     this.initializeGrid();
   }
+
+  areNeighbors(row1, col1, row2, col2) {
+    if (row1 === row2 && col1 === col2) {
+      return false;
+    }
+
+    const sameRow = row1 === row2;
+    const sameCol = col1 === col2;
+    const adjacentRows = Math.abs(row1 - row2) === 1;
+    const adjacentCols = Math.abs(col1 - col2) === 1;
+
+    if (sameRow && adjacentCols) {
+      return true;
+    }
+
+    if (sameCol && adjacentRows) {
+      return true;
+    }
+
+    if (sameRow) {
+      const minCol = Math.min(col1, col2);
+      const maxCol = Math.max(col1, col2);
+      for (let c = minCol + 1; c < maxCol; c++) {
+        if (this.grid[row1][c] !== null) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (sameCol) {
+      const minRow = Math.min(row1, row2);
+      const maxRow = Math.max(row1, row2);
+      for (let r = minRow + 1; r < maxRow; r++) {
+        if (this.grid[r][col1] !== null) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    if (adjacentRows) {
+      const lastColRow1 = this.getLastNonEmptyCol(row1);
+      const firstColRow2 = this.getFirstNonEmptyCol(row2);
+      const lastColRow2 = this.getLastNonEmptyCol(row2);
+      const firstColRow1 = this.getFirstNonEmptyCol(row1);
+
+      if (row2 === row1 + 1 && col1 === lastColRow1 && col2 === firstColRow2) {
+        return true;
+      }
+
+      if (row1 === row2 + 1 && col1 === firstColRow1 && col2 === lastColRow2) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  getLastNonEmptyCol(row) {
+    for (let col = this.grid[row].length - 1; col >= 0; col--) {
+      if (this.grid[row][col] !== null) {
+        return col;
+      }
+    }
+    return -1;
+  }
+
+  getFirstNonEmptyCol(row) {
+    for (let col = 0; col < this.grid[row].length; col++) {
+      if (this.grid[row][col] !== null) {
+        return col;
+      }
+    }
+    return -1;
+  }
+
+  isValidPair(row1, col1, row2, col2) {
+    if (
+      row1 < 0 ||
+      row1 >= this.grid.length ||
+      col1 < 0 ||
+      col1 >= this.grid[0].length ||
+      row2 < 0 ||
+      row2 >= this.grid.length ||
+      col2 < 0 ||
+      col2 >= this.grid[0].length
+    ) {
+      return false;
+    }
+
+    const value1 = this.grid[row1][col1];
+    const value2 = this.grid[row2][col2];
+
+    if (value1 === null || value2 === null) {
+      return false;
+    }
+
+    if (!this.areNeighbors(row1, col1, row2, col2)) {
+      return false;
+    }
+
+    if (value1 === value2) {
+      return true;
+    }
+
+    if (value1 + value2 === 10) {
+      return true;
+    }
+
+    return false;
+  }
+
+  getPairScore(row1, col1, row2, col2) {
+    const value1 = this.grid[row1][col1];
+    const value2 = this.grid[row2][col2];
+
+    if (value1 === 5 && value2 === 5) {
+      return 3;
+    }
+
+    if (value1 === value2) {
+      return 1;
+    }
+
+    if (value1 + value2 === 10) {
+      return 2;
+    }
+
+    return 0;
+  }
+
+  removePair(row1, col1, row2, col2) {
+    const score = this.getPairScore(row1, col1, row2, col2);
+    this.score += score;
+
+    this.grid[row1][col1] = null;
+    this.grid[row2][col2] = null;
+  }
 }

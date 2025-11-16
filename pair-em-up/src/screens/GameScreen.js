@@ -179,12 +179,63 @@ export class GameScreen {
   }
 
   handleCellClick(cell, row, col) {
+    if (cell.classList.contains('crossed-out') || cell.classList.contains('empty')) {
+      return;
+    }
+
+    if (!cell.classList.contains('has-number')) {
+      return;
+    }
+
     if (cell.classList.contains('selected')) {
       cell.classList.remove('selected');
       this.selectedCells = this.selectedCells.filter((c) => !(c.row === row && c.col === col));
-    } else {
-      cell.classList.add('selected');
-      this.selectedCells.push({ row, col, element: cell });
+      return;
+    }
+
+    if (this.selectedCells.length >= 2) {
+      this.clearSelection();
+    }
+
+    cell.classList.add('selected');
+    this.selectedCells.push({ row, col, element: cell });
+
+    if (this.selectedCells.length === 2) {
+      const [cell1, cell2] = this.selectedCells;
+      if (this.gameLogic.isValidPair(cell1.row, cell1.col, cell2.row, cell2.col)) {
+        this.crossOutPair(cell1, cell2);
+        this.updateScore();
+      } else {
+        setTimeout(() => {
+          this.clearSelection();
+        }, 300);
+      }
+    }
+  }
+
+  clearSelection() {
+    this.selectedCells.forEach((cell) => {
+      cell.element.classList.remove('selected');
+    });
+    this.selectedCells = [];
+  }
+
+  crossOutPair(cell1, cell2) {
+    cell1.element.classList.add('crossed-out');
+    cell2.element.classList.add('crossed-out');
+    cell1.element.classList.remove('selected');
+    cell2.element.classList.remove('selected');
+    cell1.element.classList.remove('has-number');
+
+    this.gameLogic.removePair(cell1.row, cell1.col, cell2.row, cell2.col);
+
+    this.selectedCells = [];
+  }
+
+  updateScore() {
+    const scoreDisplay = document.querySelector('.current-score strong');
+    if (scoreDisplay) {
+      scoreDisplay.textContent = this.gameLogic.score;
     }
   }
 
@@ -243,16 +294,19 @@ export class GameScreen {
     rightControls.className = 'right-controls';
 
     const helpers = [
-      { text: 'Hint', count: 3 },
-      { text: 'Undo', count: 5 },
-      { text: 'Add Numbers', count: 2 },
-      { text: 'Shuffle', count: 1 },
-      { text: 'Eraser', count: 4 },
+      { text: 'Add Numbers', count: 10 },
+      { text: 'Mix', count: 5 },
+      { text: 'Eraser', count: 5 },
+      { text: 'Back', count: '∞' },
     ];
 
     helpers.forEach((helper) => {
+      let buttonText = helper.text;
+      if (helper.count !== '∞') {
+        buttonText = `${helper.text} (${helper.count})`;
+      }
       const helperBtn = Button.create({
-        text: `${helper.text} (${helper.count})`,
+        text: buttonText,
         className: 'control-btn helper-btn',
         onClick: () => {
           console.log(`${helper.text} clicked`);
@@ -268,13 +322,6 @@ export class GameScreen {
     if (this.timerElement) {
       this.timerElement.textContent = this.gameLogic.getFormattedTime();
       setTimeout(() => this.updateTimer(), 1000);
-    }
-  }
-
-  updateScore() {
-    const scoreElement = document.querySelector('.current-score strong');
-    if (scoreElement) {
-      scoreElement.textContent = this.gameLogic.score;
     }
   }
 }

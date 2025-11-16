@@ -520,6 +520,34 @@ body::before {
   transform: scale(1.1);
 }
 
+.grid-cell.crossed-out {
+  position: relative;
+  opacity: 0.4;
+  pointer-events: none;
+  background: #f5f5f5;
+  color: #999;
+}
+
+.grid-cell.crossed-out::before,
+.grid-cell.crossed-out::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 80%;
+  height: 2px;
+  background: #e74c3c;
+  z-index: 1;
+}
+
+.grid-cell.crossed-out::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.grid-cell.crossed-out::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
 .grid-cell.empty {
   background: transparent;
   border: none;

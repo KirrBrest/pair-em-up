@@ -18,6 +18,7 @@ export default [
         global: 'readonly',
         window: 'readonly',
         document: 'readonly',
+        localStorage: 'readonly',
       },
     },
     rules: {

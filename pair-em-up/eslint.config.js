@@ -19,6 +19,10 @@ export default [
         window: 'readonly',
         document: 'readonly',
         localStorage: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
       },
     },
     rules: {

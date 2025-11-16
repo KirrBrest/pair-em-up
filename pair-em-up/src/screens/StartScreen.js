@@ -1,4 +1,5 @@
 import { Button } from '../components/Button.js';
+import { GameScreen } from './GameScreen.js';
 
 export class StartScreen {
   constructor() {
@@ -11,9 +12,7 @@ export class StartScreen {
   }
 
   createStartScreen() {
-    const body = document.body;
-
-    this.createBackgroundText();
+    const appWrapper = document.querySelector('.app-wrapper');
 
     const startScreen = document.createElement('div');
     startScreen.className = 'start-screen';
@@ -44,7 +43,7 @@ export class StartScreen {
       text: 'Classic',
       className: 'mode-btn',
       onClick: () => {
-        console.log('Classic mode selected');
+        new GameScreen('classic');
       },
     });
 
@@ -52,7 +51,7 @@ export class StartScreen {
       text: 'Random',
       className: 'mode-btn',
       onClick: () => {
-        console.log('Random mode selected');
+        new GameScreen('random');
       },
     });
 
@@ -60,7 +59,7 @@ export class StartScreen {
       text: 'Chaotic',
       className: 'mode-btn',
       onClick: () => {
-        console.log('Chaotic mode selected');
+        new GameScreen('chaotic');
       },
     });
 
@@ -68,7 +67,7 @@ export class StartScreen {
       text: 'Number Selection',
       className: 'mode-btn',
       onClick: () => {
-        console.log('Number Selection mode selected');
+        new GameScreen('numberSelection', { tensDigit: 1 });
       },
     });
 
@@ -107,16 +106,26 @@ export class StartScreen {
       },
     });
 
+    const themeBtn = Button.create({
+      text: 'Theme',
+      className: 'action-btn theme-btn',
+      onClick: () => {
+        console.log('Theme toggle clicked');
+      },
+    });
+
     gameActions.appendChild(continueBtn);
     gameActions.appendChild(settingsBtn);
     gameActions.appendChild(resultsBtn);
+    gameActions.appendChild(themeBtn);
 
     startScreen.appendChild(title);
     startScreen.appendChild(authorCredit);
     startScreen.appendChild(modeSelection);
     startScreen.appendChild(gameActions);
 
-    body.appendChild(startScreen);
+    this.createBackgroundText();
+    appWrapper.appendChild(startScreen);
     this.container = startScreen;
   }
 
@@ -127,6 +136,10 @@ export class StartScreen {
 
   createBackgroundText() {
     const body = document.body;
+
+    if (document.querySelector('.background-text')) {
+      return;
+    }
 
     const backgroundText = document.createElement('div');
     backgroundText.className = 'background-text';

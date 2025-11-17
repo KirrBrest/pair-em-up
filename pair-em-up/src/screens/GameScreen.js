@@ -1,5 +1,13 @@
 import { Button } from '../components/Button.js';
 import { GameLogic } from '../game/GameLogic.js';
+import { ResetHandler } from '../buttons/resetHandler.js';
+import { SaveHandler } from '../buttons/saveHandler.js';
+import { ContinueHandler } from '../buttons/continueHandler.js';
+import { EraserHandler } from '../buttons/eraserHandler.js';
+import { BackHandler } from '../buttons/backHandler.js';
+import { StartScreen } from './StartScreen.js';
+import { MixHandler } from '../buttons/mixHandler.js';
+import { AutoSaveHandler } from '../buttons/autoSaveHandler.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -8,14 +16,51 @@ export class GameScreen {
     this.gameLogic = new GameLogic(mode, options);
     this.container = null;
     this.selectedCells = [];
+    this.helperCounts = {
+      eraser: 0,
+      mix: 0,
+      addnumbers: 0,
+    };
+    this.eraserMode = false;
+    this.previousState = null;
+    this.backUsed = false;
     this.init();
   }
 
   init() {
     this.gameLogic.initializeGrid();
+    this.loadPreviousStateFromStorage();
     this.createGameScreen();
     this.gameLogic.startTimer();
     this.updateTimer();
+    this.setupAutoSave();
+  }
+
+  setupAutoSave() {
+    const autoSaveHandler = new AutoSaveHandler(this);
+    window.addEventListener('beforeunload', () => {
+      autoSaveHandler.handle();
+    });
+
+    window.addEventListener('pagehide', () => {
+      autoSaveHandler.handle();
+    });
+  }
+
+  loadPreviousStateFromStorage() {
+    const savedPreviousState = localStorage.getItem('pairEmUpPreviousState');
+    if (savedPreviousState) {
+      try {
+        this.previousState = JSON.parse(savedPreviousState);
+        this.backUsed = false;
+      } catch (error) {
+        this.previousState = null;
+        this.backUsed = true;
+      }
+    } else {
+      this.previousState = null;
+      this.backUsed = true;
+    }
   }
 
   createGameScreen() {
@@ -45,6 +90,14 @@ export class GameScreen {
   createHeader() {
     const header = document.createElement('div');
     header.className = 'game-header';
+
+    const homeBtn = Button.create({
+      text: 'Home',
+      className: 'control-btn home-btn',
+      onClick: () => {
+        this.goToStartScreen();
+      },
+    });
 
     const scoreDisplay = document.createElement('div');
     scoreDisplay.className = 'score-display';
@@ -142,13 +195,25 @@ export class GameScreen {
     timerContainer.appendChild(settingsBtn);
     timerContainer.appendChild(themeBtn);
 
+    header.appendChild(homeBtn);
     header.appendChild(scoreDisplay);
     header.appendChild(timerContainer);
 
     return header;
   }
 
-  createGrid() {
+  goToStartScreen() {
+    const autoSaveHandler = new AutoSaveHandler(this);
+    autoSaveHandler.handle();
+    this.gameLogic.stopTimer();
+    const appWrapper = document.querySelector('.app-wrapper');
+    while (appWrapper.firstChild) {
+      appWrapper.removeChild(appWrapper.firstChild);
+    }
+    new StartScreen();
+  }
+
+  createGrid(crossedOutCells = []) {
     const gridContainer = document.createElement('div');
     gridContainer.className = 'grid-container';
 
@@ -162,10 +227,27 @@ export class GameScreen {
         cell.dataset.row = rowIndex;
         cell.dataset.col = colIndex;
 
-        if (cellValue !== null) {
-          cell.textContent = cellValue;
-          cell.classList.add('has-number');
-          cell.addEventListener('click', () => this.handleCellClick(cell, rowIndex, colIndex));
+        const isCrossedOut = crossedOutCells.some((c) => c.row === rowIndex && c.col === colIndex);
+
+        if (cellValue !== null || isCrossedOut) {
+          if (isCrossedOut) {
+            const crossedCell = crossedOutCells.find(
+              (c) => c.row === rowIndex && c.col === colIndex
+            );
+            cell.textContent = crossedCell ? crossedCell.value : '';
+            cell.classList.add('crossed-out');
+          } else {
+            cell.textContent = cellValue;
+            cell.classList.add('has-number');
+          }
+
+          cell.addEventListener('click', () => {
+            if (this.eraserMode) {
+              this.handleEraserClick(cell);
+            } else {
+              this.handleCellClick(cell, rowIndex, colIndex);
+            }
+          });
         } else {
           cell.classList.add('empty');
         }
@@ -175,7 +257,19 @@ export class GameScreen {
     });
 
     gridContainer.appendChild(grid);
+    this.gridElement = grid;
     return gridContainer;
+  }
+
+  recreateGrid(crossedOutCells = []) {
+    const gameContent = document.querySelector('.game-content');
+    if (gameContent) {
+      const oldGridContainer = document.querySelector('.grid-container');
+      if (oldGridContainer) {
+        const newGridContainer = this.createGrid(crossedOutCells);
+        oldGridContainer.replaceWith(newGridContainer);
+      }
+    }
   }
 
   handleCellClick(cell, row, col) {
@@ -221,6 +315,11 @@ export class GameScreen {
   }
 
   crossOutPair(cell1, cell2) {
+    this.savePreviousState('pair', {
+      cell1: { row: cell1.row, col: cell1.col },
+      cell2: { row: cell2.row, col: cell2.col },
+    });
+
     cell1.element.classList.add('crossed-out');
     cell2.element.classList.add('crossed-out');
     cell1.element.classList.remove('selected');
@@ -230,6 +329,33 @@ export class GameScreen {
     this.gameLogic.removePair(cell1.row, cell1.col, cell2.row, cell2.col);
 
     this.selectedCells = [];
+    this.backUsed = false;
+    this.setBackButtonDisabled(false);
+  }
+
+  savePreviousState(actionType, actionData) {
+    const crossedOutCells = [];
+    const gridCells = document.querySelectorAll('.grid-cell.crossed-out');
+    gridCells.forEach((cell) => {
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      const value = cell.textContent.trim();
+      if (!isNaN(row) && !isNaN(col) && row >= 0 && col >= 0 && value && value !== '') {
+        crossedOutCells.push({ row, col, value: parseInt(value) || value });
+      }
+    });
+
+    const previousState = {
+      actionType: actionType,
+      actionData: actionData,
+      grid: JSON.parse(JSON.stringify(this.gameLogic.grid)),
+      score: this.gameLogic.score,
+      helperCounts: { ...this.helperCounts },
+      crossedOutCells: crossedOutCells,
+    };
+
+    this.previousState = previousState;
+    localStorage.setItem('pairEmUpPreviousState', JSON.stringify(previousState));
   }
 
   updateScore() {
@@ -258,28 +384,35 @@ export class GameScreen {
     const leftControls = document.createElement('div');
     leftControls.className = 'left-controls';
 
+    const resetHandler = new ResetHandler(this);
     const resetBtn = Button.create({
       text: 'Reset',
       className: 'control-btn reset-btn',
       onClick: () => {
-        console.log('Reset clicked');
+        resetHandler.handle();
       },
     });
 
+    const saveHandler = new SaveHandler(this);
     const saveBtn = Button.create({
       text: 'Save Game',
       className: 'control-btn save-btn',
       onClick: () => {
-        console.log('Save game clicked');
+        saveHandler.handle();
       },
     });
 
+    const continueHandler = new ContinueHandler(this);
+    const hasSavedGame = localStorage.getItem('pairEmUpGame') !== null;
     const continueBtn = Button.create({
       text: 'Continue Game',
       className: 'control-btn continue-btn',
-      onClick: () => {
-        console.log('Continue game clicked');
-      },
+      onClick: hasSavedGame
+        ? () => {
+            continueHandler.handle();
+          }
+        : null,
+      disabled: !hasSavedGame,
     });
 
     leftControls.appendChild(resetBtn);
@@ -303,15 +436,35 @@ export class GameScreen {
     helpers.forEach((helper) => {
       let buttonText = helper.text;
       if (helper.count !== '∞') {
-        buttonText = `${helper.text} (${helper.count})`;
+        const key = helper.text.toLowerCase().replace(' ', '');
+        const used = this.helperCounts[key] || 0;
+        const remaining = helper.count - used;
+        buttonText = `${helper.text} (${remaining})`;
       }
       const helperBtn = Button.create({
         text: buttonText,
         className: 'control-btn helper-btn',
         onClick: () => {
-          console.log(`${helper.text} clicked`);
+          if (helper.text === 'Eraser') {
+            if (!this.eraserMode) {
+              this.toggleEraserMode();
+            }
+          } else if (helper.text === 'Back') {
+            const backHandler = new BackHandler(this);
+            backHandler.handle();
+          } else if (helper.text === 'Mix') {
+            const mixHandler = new MixHandler(this);
+            mixHandler.handle();
+          } else {
+            console.log(`${helper.text} clicked`);
+          }
         },
       });
+      helperBtn.dataset.helperType = helper.text;
+      if (helper.text === 'Back' && (this.backUsed || !this.previousState)) {
+        helperBtn.disabled = true;
+        helperBtn.classList.add('disabled');
+      }
       rightControls.appendChild(helperBtn);
     });
 
@@ -322,6 +475,98 @@ export class GameScreen {
     if (this.timerElement) {
       this.timerElement.textContent = this.gameLogic.getFormattedTime();
       setTimeout(() => this.updateTimer(), 1000);
+    }
+  }
+
+  toggleEraserMode() {
+    this.eraserMode = !this.eraserMode;
+    const eraserBtn = document.querySelector('[data-helper-type="Eraser"]');
+    if (eraserBtn) {
+      if (this.eraserMode) {
+        eraserBtn.classList.add('active');
+        eraserBtn.textContent = eraserBtn.textContent.replace('Eraser', 'Cancel');
+      } else {
+        eraserBtn.classList.remove('active');
+        const remaining = 5 - (this.helperCounts.eraser || 0);
+        eraserBtn.textContent = `Eraser (${remaining})`;
+      }
+    }
+  }
+
+  handleEraserClick(cell) {
+    const eraserHandler = new EraserHandler(this);
+    eraserHandler.handle(cell);
+    this.toggleEraserMode();
+  }
+
+  updateHelperButton(helperName, remaining) {
+    const helperBtn = document.querySelector(`[data-helper-type="${helperName}"]`);
+    if (helperBtn) {
+      if (remaining <= 0) {
+        helperBtn.disabled = true;
+        helperBtn.classList.add('disabled');
+      } else {
+        helperBtn.disabled = false;
+        helperBtn.classList.remove('disabled');
+      }
+      const baseText = helperName === 'Eraser' ? 'Eraser' : helperName;
+      helperBtn.textContent = `${baseText} (${remaining})`;
+    }
+  }
+
+  updateAllHelperButtons() {
+    const helpers = [
+      { text: 'Add Numbers', count: 10 },
+      { text: 'Mix', count: 5 },
+      { text: 'Eraser', count: 5 },
+      { text: 'Back', count: '∞' },
+    ];
+
+    helpers.forEach((helper) => {
+      if (helper.count === '∞') {
+        const helperBtn = document.querySelector(`[data-helper-type="${helper.text}"]`);
+        if (helperBtn) {
+          helperBtn.textContent = helper.text;
+          if (helper.text === 'Back') {
+            if (this.backUsed || !this.previousState) {
+              helperBtn.disabled = true;
+              helperBtn.classList.add('disabled');
+            } else {
+              helperBtn.disabled = false;
+              helperBtn.classList.remove('disabled');
+            }
+          } else {
+            helperBtn.disabled = false;
+            helperBtn.classList.remove('disabled', 'active');
+          }
+        }
+      } else {
+        const key = helper.text.toLowerCase().replace(' ', '');
+        const used = this.helperCounts[key] || 0;
+        const remaining = helper.count - used;
+        this.updateHelperButton(helper.text, remaining);
+
+        if (helper.text === 'Eraser' && this.eraserMode) {
+          const eraserBtn = document.querySelector(`[data-helper-type="Eraser"]`);
+          if (eraserBtn) {
+            eraserBtn.classList.remove('active');
+            eraserBtn.textContent = `Eraser (${remaining})`;
+          }
+          this.eraserMode = false;
+        }
+      }
+    });
+  }
+
+  setBackButtonDisabled(disabled) {
+    const backBtn = document.querySelector('[data-helper-type="Back"]');
+    if (backBtn) {
+      backBtn.disabled = disabled;
+      if (disabled) {
+        backBtn.classList.add('disabled');
+      } else {
+        backBtn.classList.remove('disabled');
+      }
     }
   }
 }

@@ -1,5 +1,6 @@
 import { Button } from '../components/Button.js';
 import { GameScreen } from './GameScreen.js';
+import { AutoLoadHandler } from '../buttons/autoLoadHandler.js';
 
 export class StartScreen {
   constructor() {
@@ -86,7 +87,7 @@ export class StartScreen {
       className: 'action-btn continue-btn',
       onClick: hasSavedGame
         ? () => {
-            console.log('Continue game clicked');
+            this.loadSavedGame();
           }
         : null,
       disabled: !hasSavedGame,
@@ -130,8 +131,27 @@ export class StartScreen {
   }
 
   checkForSavedGame() {
-    const savedGame = localStorage.getItem('pairEmUpGame');
-    return savedGame !== null;
+    const autoSavedGame = localStorage.getItem('pairEmUpAutoSave');
+    return autoSavedGame !== null;
+  }
+
+  loadSavedGame() {
+    const autoSavedGame = localStorage.getItem('pairEmUpAutoSave');
+    if (!autoSavedGame) {
+      return;
+    }
+
+    try {
+      const gameState = JSON.parse(autoSavedGame);
+      const mode = gameState.mode || 'classic';
+      const options = gameState.options || {};
+
+      const gameScreen = new GameScreen(mode, options);
+      const autoLoadHandler = new AutoLoadHandler(gameScreen);
+      autoLoadHandler.handle();
+    } catch (error) {
+      // Error loading game
+    }
   }
 
   createBackgroundText() {

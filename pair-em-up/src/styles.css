@@ -358,11 +358,35 @@ body::before {
 
 .game-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   margin-bottom: 30px;
   padding-bottom: 15px;
   border-bottom: 2px solid #8b7355;
+  gap: 20px;
+}
+
+.game-header .home-btn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  color: #2c3e50;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.game-header .home-btn:hover {
+  opacity: 1;
+  background: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+.game-header .home-btn:active {
+  transform: none;
 }
 
 .score-display {
@@ -386,6 +410,7 @@ body::before {
   display: flex;
   align-items: center;
   gap: 15px;
+  margin-left: auto;
 }
 
 .timer-display {
@@ -567,6 +592,18 @@ body::before {
   box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
 }
 
+.control-btn.active {
+  background: #3498db;
+  color: white;
+  border-color: #2980b9;
+}
+
+.control-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .control-btn:hover {
   background: #ecf0f1;
   transform: translate(1px, 1px);
@@ -627,13 +664,28 @@ body::before {
 
   .game-header {
     flex-direction: column;
-    gap: 15px;
     align-items: flex-start;
+    gap: 10px;
+  }
+
+  .game-header .home-btn {
+    font-size: 0.75rem;
+    padding: 6px 12px;
   }
 
   .score-display {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 15px;
+    font-size: 0.9rem;
+  }
+
+  .timer-container {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .timer-display {
+    font-size: 1.2rem;
   }
 
   .grid-cell {

@@ -141,17 +141,13 @@ export class StartScreen {
       return;
     }
 
-    try {
-      const gameState = JSON.parse(autoSavedGame);
-      const mode = gameState.mode || 'classic';
-      const options = gameState.options || {};
+    const gameState = JSON.parse(autoSavedGame);
+    const mode = gameState.mode || 'classic';
+    const options = gameState.options || {};
 
-      const gameScreen = new GameScreen(mode, options);
-      const autoLoadHandler = new AutoLoadHandler(gameScreen);
-      autoLoadHandler.handle();
-    } catch (error) {
-      // Error loading game
-    }
+    const gameScreen = new GameScreen(mode, options);
+    const autoLoadHandler = new AutoLoadHandler(gameScreen);
+    autoLoadHandler.handle();
   }
 
   showNumberSelectionModal() {

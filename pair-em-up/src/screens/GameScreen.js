@@ -9,6 +9,7 @@ import { StartScreen } from './StartScreen.js';
 import { MixHandler } from '../buttons/mixHandler.js';
 import { AutoSaveHandler } from '../buttons/autoSaveHandler.js';
 import { AddNumbersHandler } from '../buttons/addNumbersHandler.js';
+import { SoundManager } from '../audio/SoundManager.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -25,6 +26,7 @@ export class GameScreen {
     this.eraserMode = false;
     this.previousState = null;
     this.backUsed = false;
+    this.soundManager = new SoundManager();
     this.init();
   }
 
@@ -35,6 +37,7 @@ export class GameScreen {
     this.gameLogic.startTimer();
     this.updateTimer();
     this.setupAutoSave();
+    this.soundManager.playGameStart();
   }
 
   setupAutoSave() {
@@ -54,7 +57,7 @@ export class GameScreen {
       try {
         this.previousState = JSON.parse(savedPreviousState);
         this.backUsed = false;
-      } catch (error) {
+      } catch {
         this.previousState = null;
         this.backUsed = true;
       }
@@ -131,7 +134,7 @@ export class GameScreen {
     const settingsBtn = document.createElement('button');
     settingsBtn.className = 'settings-icon-btn';
     settingsBtn.addEventListener('click', () => {
-      console.log('Settings clicked');
+      this.showSettingsModal();
     });
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -185,16 +188,8 @@ export class GameScreen {
     svg.appendChild(circle);
     settingsBtn.appendChild(svg);
 
-    const themeBtn = document.createElement('button');
-    themeBtn.className = 'settings-icon-btn theme-icon-btn';
-    themeBtn.addEventListener('click', () => {
-      console.log('Theme toggle clicked');
-    });
-    themeBtn.textContent = '🌓';
-
     timerContainer.appendChild(timerDisplay);
     timerContainer.appendChild(settingsBtn);
-    timerContainer.appendChild(themeBtn);
 
     header.appendChild(homeBtn);
     header.appendChild(scoreDisplay);
@@ -285,6 +280,7 @@ export class GameScreen {
     if (cell.classList.contains('selected')) {
       cell.classList.remove('selected');
       this.selectedCells = this.selectedCells.filter((c) => !(c.row === row && c.col === col));
+      this.soundManager.playDeselect();
       return;
     }
 
@@ -294,6 +290,7 @@ export class GameScreen {
 
     cell.classList.add('selected');
     this.selectedCells.push({ row, col, element: cell });
+    this.soundManager.playSelect();
 
     if (this.selectedCells.length === 2) {
       const [cell1, cell2] = this.selectedCells;
@@ -303,7 +300,9 @@ export class GameScreen {
       ) {
         this.crossOutPair(cell1, cell2);
         this.updateScore();
+        this.soundManager.playValidPair();
       } else {
+        this.soundManager.playInvalidPair();
         setTimeout(() => {
           this.clearSelection();
         }, 300);
@@ -329,6 +328,79 @@ export class GameScreen {
       }
     });
     return crossedOutPositions;
+  }
+
+  showSettingsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    const title = document.createElement('h2');
+    title.className = 'modal-title';
+    title.textContent = 'Settings';
+
+    const settingsContainer = document.createElement('div');
+    settingsContainer.className = 'settings-container';
+
+    const audioContainer = document.createElement('div');
+    audioContainer.className = 'setting-item';
+
+    const audioLabel = document.createElement('span');
+    audioLabel.className = 'setting-label';
+    audioLabel.textContent = 'Audio';
+
+    const audioToggle = document.createElement('button');
+    audioToggle.className = 'control-btn setting-toggle';
+    const audioEnabled = localStorage.getItem('pairEmUpAudio') !== 'false';
+    audioToggle.textContent = audioEnabled ? 'ON' : 'OFF';
+    audioToggle.addEventListener('click', () => {
+      const currentState = localStorage.getItem('pairEmUpAudio') !== 'false';
+      const newState = !currentState;
+      localStorage.setItem('pairEmUpAudio', String(newState));
+      audioToggle.textContent = newState ? 'ON' : 'OFF';
+      console.log('Audio toggle clicked');
+    });
+
+    audioContainer.appendChild(audioLabel);
+    audioContainer.appendChild(audioToggle);
+
+    const themeContainer = document.createElement('div');
+    themeContainer.className = 'setting-item';
+
+    const themeLabel = document.createElement('span');
+    themeLabel.className = 'setting-label';
+    themeLabel.textContent = 'Theme';
+
+    const themeToggle = document.createElement('button');
+    themeToggle.className = 'control-btn setting-toggle';
+    const themeMode = localStorage.getItem('pairEmUpTheme') || 'light';
+    themeToggle.textContent = themeMode === 'dark' ? 'Dark' : 'Light';
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = localStorage.getItem('pairEmUpTheme') || 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('pairEmUpTheme', newTheme);
+      themeToggle.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+      console.log('Theme toggle clicked');
+    });
+
+    themeContainer.appendChild(themeLabel);
+    themeContainer.appendChild(themeToggle);
+
+    settingsContainer.appendChild(audioContainer);
+    settingsContainer.appendChild(themeContainer);
+
+    modalContent.appendChild(title);
+    modalContent.appendChild(settingsContainer);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
 
   crossOutPair(cell1, cell2) {
@@ -380,6 +452,10 @@ export class GameScreen {
     if (scoreDisplay) {
       scoreDisplay.textContent = this.gameLogic.score;
     }
+
+    if (this.gameLogic.score >= this.gameLogic.targetScore) {
+      this.soundManager.playGameEnd();
+    }
   }
 
   createGameContent() {
@@ -416,21 +492,26 @@ export class GameScreen {
       className: 'control-btn save-btn',
       onClick: () => {
         saveHandler.handle();
+        this.updateContinueButton();
       },
     });
 
     const continueHandler = new ContinueHandler(this);
+    this.continueHandler = continueHandler;
     const hasSavedGame = localStorage.getItem('pairEmUpGame') !== null;
+    this.continueBtnClickHandler = () => {
+      continueHandler.handle();
+    };
     const continueBtn = Button.create({
       text: 'Continue Game',
       className: 'control-btn continue-btn',
-      onClick: hasSavedGame
-        ? () => {
-            continueHandler.handle();
-          }
-        : null,
+      onClick: null,
       disabled: !hasSavedGame,
     });
+    if (hasSavedGame) {
+      continueBtn.addEventListener('click', this.continueBtnClickHandler);
+    }
+    this.continueBtn = continueBtn;
 
     leftControls.appendChild(resetBtn);
     leftControls.appendChild(saveBtn);
@@ -470,9 +551,11 @@ export class GameScreen {
           } else if (helper.text === 'Mix') {
             const mixHandler = new MixHandler(this);
             mixHandler.handle();
+            this.soundManager.playHelperUse();
           } else if (helper.text === 'Add Numbers') {
             const addNumbersHandler = new AddNumbersHandler(this);
             addNumbersHandler.handle();
+            this.soundManager.playHelperUse();
           } else {
             console.log(`${helper.text} clicked`);
           }
@@ -516,6 +599,7 @@ export class GameScreen {
     const eraserHandler = new EraserHandler(this);
     eraserHandler.handle(cell);
     this.toggleEraserMode();
+    this.soundManager.playHelperUse();
   }
 
   updateHelperButton(helperName, remaining) {
@@ -530,6 +614,24 @@ export class GameScreen {
       }
       const baseText = helperName === 'Eraser' ? 'Eraser' : helperName;
       helperBtn.textContent = `${baseText} (${remaining})`;
+    }
+  }
+
+  updateContinueButton() {
+    if (!this.continueBtn) {
+      return;
+    }
+
+    const hasSavedGame = localStorage.getItem('pairEmUpGame') !== null;
+    this.continueBtn.disabled = !hasSavedGame;
+
+    if (hasSavedGame) {
+      this.continueBtn.classList.remove('disabled');
+      this.continueBtn.removeEventListener('click', this.continueBtnClickHandler);
+      this.continueBtn.addEventListener('click', this.continueBtnClickHandler);
+    } else {
+      this.continueBtn.classList.add('disabled');
+      this.continueBtn.removeEventListener('click', this.continueBtnClickHandler);
     }
   }
 

@@ -10,9 +10,11 @@ import { MixHandler } from '../buttons/mixHandler.js';
 import { AutoSaveHandler } from '../buttons/autoSaveHandler.js';
 import { AddNumbersHandler } from '../buttons/addNumbersHandler.js';
 import { SoundManager } from '../audio/SoundManager.js';
+import { MusicManager } from '../audio/MusicManager.js';
 import { GameEndChecker } from '../game/GameEndChecker.js';
 import { ResultsManager } from '../results/ResultsManager.js';
 import { GameResultsModal } from '../results/GameResultsModal.js';
+import { ThemeManager } from '../utils/ThemeManager.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -30,6 +32,7 @@ export class GameScreen {
     this.previousState = null;
     this.backUsed = false;
     this.soundManager = new SoundManager();
+    this.musicManager = new MusicManager();
     this.totalMoves = 0;
     this.gameEnded = false;
     this.playToEnd = false;
@@ -37,6 +40,7 @@ export class GameScreen {
   }
 
   init() {
+    ThemeManager.init();
     this.gameLogic.initializeGrid();
     this.loadPreviousStateFromStorage();
     this.createGameScreen();
@@ -44,6 +48,9 @@ export class GameScreen {
     this.updateTimer();
     this.setupAutoSave();
     this.soundManager.playGameStart();
+    setTimeout(() => {
+      this.musicManager.play();
+    }, 500);
   }
 
   setupAutoSave() {
@@ -171,22 +178,36 @@ export class GameScreen {
     gradient.setAttribute('x2', '100%');
     gradient.setAttribute('y2', '100%');
 
+    const getComputedStyle = window.getComputedStyle(document.body);
+    const iconColor =
+      getComputedStyle.getPropertyValue('--settings-icon-color').trim() || 'rgba(44, 62, 80, 0.8)';
+    const iconColorMid =
+      getComputedStyle.getPropertyValue('--settings-icon-color-mid').trim() ||
+      'rgba(44, 62, 80, 0.5)';
+    const iconColorLight =
+      getComputedStyle.getPropertyValue('--settings-icon-color-light').trim() ||
+      'rgba(44, 62, 80, 0.3)';
+
     const stop1 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop1.setAttribute('offset', '0%');
-    stop1.setAttribute('style', 'stop-color:rgba(44, 62, 80, 0.8);stop-opacity:1');
+    stop1.setAttribute('style', `stop-color:${iconColor};stop-opacity:1`);
 
     const stop2 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop2.setAttribute('offset', '50%');
-    stop2.setAttribute('style', 'stop-color:rgba(44, 62, 80, 0.5);stop-opacity:1');
+    stop2.setAttribute('style', `stop-color:${iconColorMid};stop-opacity:1`);
 
     const stop3 = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
     stop3.setAttribute('offset', '100%');
-    stop3.setAttribute('style', 'stop-color:rgba(44, 62, 80, 0.3);stop-opacity:1');
+    stop3.setAttribute('style', `stop-color:${iconColorLight};stop-opacity:1`);
 
     gradient.appendChild(stop1);
     gradient.appendChild(stop2);
     gradient.appendChild(stop3);
     defs.appendChild(gradient);
+
+    const currentTheme = ThemeManager.getCurrentTheme();
+    const pathOpacity = currentTheme === 'dark' ? '1' : '0.6';
+    const circleOpacity = currentTheme === 'dark' ? '0.8' : '0.4';
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     path.setAttribute(
@@ -194,19 +215,25 @@ export class GameScreen {
       'M19.43 12.97C19.47 12.65 19.5 12.33 19.5 12C19.5 11.67 19.47 11.35 19.43 11.03L21.54 9.37C21.73 9.22 21.78 8.95 21.66 8.73L19.66 5.27C19.54 5.05 19.27 4.96 19.05 5.05L16.56 6.05C16.04 5.65 15.5 5.32 14.87 5.07L14.49 2.42C14.46 2.18 14.25 2 14 2H10C9.75 2 9.54 2.18 9.51 2.42L9.13 5.07C8.5 5.32 7.96 5.66 7.44 6.05L4.95 5.05C4.73 4.96 4.46 5.05 4.34 5.27L2.34 8.73C2.21 8.95 2.27 9.22 2.46 9.37L4.57 11.03C4.53 11.35 4.5 11.67 4.5 12C4.5 12.33 4.53 12.65 4.57 12.97L2.46 14.63C2.27 14.78 2.21 15.05 2.34 15.27L4.34 18.73C4.46 18.95 4.73 19.03 4.95 18.95L7.44 17.95C7.96 18.34 8.5 18.68 9.13 18.93L9.51 21.58C9.54 21.82 9.75 22 10 22H14C14.25 22 14.46 21.82 14.49 21.58L14.87 18.93C15.5 18.67 16.04 18.34 16.56 17.95L19.05 18.95C19.27 19.03 19.54 18.95 19.66 18.73L21.66 15.27C21.78 15.05 21.73 14.78 21.54 14.63L19.43 12.97Z'
     );
     path.setAttribute('fill', 'url(#gearGradient)');
-    path.setAttribute('opacity', '0.6');
+    path.setAttribute('opacity', pathOpacity);
 
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circle.setAttribute('cx', '12');
     circle.setAttribute('cy', '12');
     circle.setAttribute('r', '3.5');
     circle.setAttribute('fill', 'url(#gearGradient)');
-    circle.setAttribute('opacity', '0.4');
+    circle.setAttribute('opacity', circleOpacity);
 
     svg.appendChild(defs);
     svg.appendChild(path);
     svg.appendChild(circle);
     settingsBtn.appendChild(svg);
+
+    this.settingsStop1 = stop1;
+    this.settingsStop2 = stop2;
+    this.settingsStop3 = stop3;
+    this.settingsPath = path;
+    this.settingsCircle = circle;
 
     timerContainer.appendChild(timerDisplay);
     timerContainer.appendChild(settingsBtn);
@@ -222,6 +249,7 @@ export class GameScreen {
     const autoSaveHandler = new AutoSaveHandler(this);
     autoSaveHandler.handle();
     this.gameLogic.stopTimer();
+    this.musicManager.stop();
     const appWrapper = document.querySelector('.app-wrapper');
     while (appWrapper.firstChild) {
       appWrapper.removeChild(appWrapper.firstChild);
@@ -290,12 +318,15 @@ export class GameScreen {
 
   handleCellClick(cell, row, col) {
     if (cell.classList.contains('crossed-out') || cell.classList.contains('empty')) {
+      this.soundManager.ensureAudioContext().catch(() => {});
       return;
     }
 
     if (!cell.classList.contains('has-number')) {
       return;
     }
+
+    this.soundManager.ensureAudioContext().catch(() => {});
 
     if (cell.classList.contains('selected')) {
       cell.classList.remove('selected');
@@ -352,6 +383,48 @@ export class GameScreen {
     return crossedOutPositions;
   }
 
+  updateSettingsIcon() {
+    if (
+      !this.settingsStop1 ||
+      !this.settingsStop2 ||
+      !this.settingsStop3 ||
+      !this.settingsPath ||
+      !this.settingsCircle
+    ) {
+      return;
+    }
+
+    const getComputedStyle = window.getComputedStyle(document.body);
+    const iconColor =
+      getComputedStyle.getPropertyValue('--settings-icon-color').trim() || 'rgba(44, 62, 80, 0.8)';
+    const iconColorMid =
+      getComputedStyle.getPropertyValue('--settings-icon-color-mid').trim() ||
+      'rgba(44, 62, 80, 0.5)';
+    const iconColorLight =
+      getComputedStyle.getPropertyValue('--settings-icon-color-light').trim() ||
+      'rgba(44, 62, 80, 0.3)';
+
+    this.settingsStop1.setAttribute('style', `stop-color:${iconColor};stop-opacity:1`);
+    this.settingsStop2.setAttribute('style', `stop-color:${iconColorMid};stop-opacity:1`);
+    this.settingsStop3.setAttribute('style', `stop-color:${iconColorLight};stop-opacity:1`);
+
+    const currentTheme = ThemeManager.getCurrentTheme();
+    const pathOpacity = currentTheme === 'dark' ? '1' : '0.6';
+    const circleOpacity = currentTheme === 'dark' ? '0.8' : '0.4';
+
+    this.settingsPath.setAttribute('opacity', pathOpacity);
+    this.settingsCircle.setAttribute('opacity', circleOpacity);
+  }
+
+  updateButtons() {
+    const buttons = document.querySelectorAll('.action-btn, .control-btn, .mode-btn, .helper-btn');
+    buttons.forEach((btn) => {
+      btn.style.backgroundColor = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    });
+  }
+
   showSettingsModal() {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -388,6 +461,29 @@ export class GameScreen {
     audioContainer.appendChild(audioLabel);
     audioContainer.appendChild(audioToggle);
 
+    const musicContainer = document.createElement('div');
+    musicContainer.className = 'setting-item';
+
+    const musicLabel = document.createElement('span');
+    musicLabel.className = 'setting-label';
+    musicLabel.textContent = 'Music';
+
+    const musicCheckbox = document.createElement('input');
+    musicCheckbox.type = 'checkbox';
+    musicCheckbox.className = 'play-to-end-checkbox';
+    musicCheckbox.checked = this.musicManager.isEnabled;
+    musicCheckbox.addEventListener('change', () => {
+      this.musicManager.setEnabled(musicCheckbox.checked);
+    });
+
+    const musicLabelWrapper = document.createElement('label');
+    musicLabelWrapper.className = 'play-to-end-label';
+    musicLabelWrapper.appendChild(musicCheckbox);
+    musicLabelWrapper.appendChild(document.createTextNode(' '));
+    musicLabelWrapper.appendChild(musicLabel);
+
+    musicContainer.appendChild(musicLabelWrapper);
+
     const themeContainer = document.createElement('div');
     themeContainer.className = 'setting-item';
 
@@ -397,20 +493,20 @@ export class GameScreen {
 
     const themeToggle = document.createElement('button');
     themeToggle.className = 'control-btn setting-toggle';
-    const themeMode = localStorage.getItem('pairEmUpTheme') || 'light';
+    const themeMode = ThemeManager.getCurrentTheme();
     themeToggle.textContent = themeMode === 'dark' ? 'Dark' : 'Light';
     themeToggle.addEventListener('click', () => {
-      const currentTheme = localStorage.getItem('pairEmUpTheme') || 'light';
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('pairEmUpTheme', newTheme);
+      const newTheme = ThemeManager.toggleTheme();
       themeToggle.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
-      console.log('Theme toggle clicked');
+      this.updateSettingsIcon();
+      this.updateButtons();
     });
 
     themeContainer.appendChild(themeLabel);
     themeContainer.appendChild(themeToggle);
 
     settingsContainer.appendChild(audioContainer);
+    settingsContainer.appendChild(musicContainer);
     settingsContainer.appendChild(themeContainer);
 
     modalContent.appendChild(title);
@@ -521,7 +617,7 @@ export class GameScreen {
     while (appWrapper.firstChild) {
       appWrapper.removeChild(appWrapper.firstChild);
     }
-    const newGameScreen = new GameScreen(this.mode, this.options);
+    new GameScreen(this.mode, this.options);
   }
 
   createGameContent() {

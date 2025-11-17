@@ -18,10 +18,27 @@ export class SoundManager {
     return this.enabled && localStorage.getItem('pairEmUpAudio') !== 'false';
   }
 
+  async ensureAudioContext() {
+    if (!this.audioContext) {
+      return;
+    }
+    if (this.audioContext.state === 'suspended') {
+      try {
+        await this.audioContext.resume();
+      } catch {
+        return;
+      }
+    }
+  }
+
   playTone(frequency, duration, type = 'sine', volume = 0.3) {
     if (!this.isEnabled() || !this.audioContext) {
       return;
     }
+
+    this.ensureAudioContext().catch(() => {
+      return;
+    });
 
     const oscillator = this.audioContext.createOscillator();
     const gainNode = this.audioContext.createGain();

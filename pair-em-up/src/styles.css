@@ -1,3 +1,91 @@
+:root {
+  --bg-color: #f5f5dc;
+  --grid-color: rgba(173, 216, 230, 0.3);
+  --margin-color: #ff6b6b;
+  --text-color: #2c3e50;
+  --paper-bg: white;
+  --paper-border: #333;
+  --cell-bg: white;
+  --cell-border: #ddd;
+  --cell-text: #2c3e50;
+  --cell-hover: #fffacd;
+  --cell-selected: #ffeb3b;
+  --cell-selected-border: #f57f17;
+  --button-bg: #ecf0f1;
+  --button-border: #bdc3c7;
+  --button-text: #2c3e50;
+  --button-hover: #d5dbdb;
+  --score-color: #e74c3c;
+  --modal-bg: #f5f5dc;
+  --modal-text: #2c3e50;
+  --background-line-color: rgba(100, 100, 100, 0.15);
+  --grade-color: #c0392b;
+  --settings-icon-color: rgba(44, 62, 80, 0.8);
+  --settings-icon-color-mid: rgba(44, 62, 80, 0.5);
+  --settings-icon-color-light: rgba(44, 62, 80, 0.3);
+  --continue-btn-bg: #2ecc71;
+  --continue-btn-border: #27ae60;
+  --continue-btn-hover: #27ae60;
+  --continue-btn-disabled: #95a5a6;
+  --continue-btn-disabled-border: #7f8c8d;
+  --settings-btn-bg: #f39c12;
+  --settings-btn-border: #e67e22;
+  --settings-btn-hover: #e67e22;
+  --helper-btn-bg: #f39c12;
+  --helper-btn-border: #e67e22;
+  --helper-btn-hover: #e67e22;
+  --save-btn-bg: #3498db;
+  --save-btn-border: #2980b9;
+  --save-btn-hover: #2980b9;
+  --reset-btn-bg: #e74c3c;
+  --reset-btn-border: #c0392b;
+  --reset-btn-hover: #c0392b;
+}
+
+.dark-theme {
+  --bg-color: #1a1a1a;
+  --grid-color: rgba(100, 100, 100, 0.2);
+  --margin-color: #ff6b6b;
+  --text-color: #e0e0e0;
+  --paper-bg: #2d2d2d;
+  --paper-border: #555;
+  --cell-bg: #3a3a3a;
+  --cell-border: #555;
+  --cell-text: #e0e0e0;
+  --cell-hover: #4a4a4a;
+  --cell-selected: #5a5a5a;
+  --cell-selected-border: #777;
+  --button-bg: #404040;
+  --button-border: #555;
+  --button-text: #e0e0e0;
+  --button-hover: #505050;
+  --score-color: #ff6b6b;
+  --modal-bg: #2d2d2d;
+  --modal-text: #e0e0e0;
+  --background-line-color: rgba(150, 150, 150, 0.1);
+  --grade-color: #ff6b6b;
+  --settings-icon-color: rgba(240, 240, 240, 1);
+  --settings-icon-color-mid: rgba(240, 240, 240, 0.85);
+  --settings-icon-color-light: rgba(240, 240, 240, 0.7);
+  --continue-btn-bg: #505050;
+  --continue-btn-border: #666;
+  --continue-btn-hover: #5a5a5a;
+  --continue-btn-disabled: #444;
+  --continue-btn-disabled-border: #333;
+  --settings-btn-bg: #505050;
+  --settings-btn-border: #666;
+  --settings-btn-hover: #5a5a5a;
+  --helper-btn-bg: #505050;
+  --helper-btn-border: #666;
+  --helper-btn-hover: #5a5a5a;
+  --save-btn-bg: #505050;
+  --save-btn-border: #666;
+  --save-btn-hover: #5a5a5a;
+  --reset-btn-bg: #505050;
+  --reset-btn-border: #666;
+  --reset-btn-hover: #5a5a5a;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -10,13 +98,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f5f5dc;
+  background: var(--bg-color);
   background-image:
-    linear-gradient(rgba(173, 216, 230, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(173, 216, 230, 0.3) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 20px 20px;
   padding: 20px;
   position: relative;
+  color: var(--text-color);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
 }
 
 body::before {
@@ -26,7 +118,7 @@ body::before {
   left: 60px;
   width: 2px;
   height: 100%;
-  background: #ff6b6b;
+  background: var(--margin-color);
   opacity: 0.3;
   z-index: 0;
 }
@@ -61,10 +153,11 @@ body::before {
   left: 80px;
   font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
   font-size: 1.1rem;
-  color: rgba(100, 100, 100, 0.15);
+  color: var(--background-line-color);
   white-space: nowrap;
   transform: rotate(-0.5deg);
   letter-spacing: 0.5px;
+  transition: color 0.3s ease;
 }
 
 .background-grade {
@@ -74,17 +167,18 @@ body::before {
   font-family: 'Caveat', cursive, sans-serif;
   font-size: 4.5rem;
   font-weight: 400;
-  color: #c0392b;
+  color: var(--grade-color);
   opacity: 0.6;
   transform: rotate(8deg);
   text-shadow: 0.5px 0.5px 1px rgba(0, 0, 0, 0.15);
   letter-spacing: 1px;
   line-height: 1;
+  transition: color 0.3s ease;
 }
 
 .start-screen {
-  background: white;
-  border: 2px solid #333;
+  background: var(--paper-bg);
+  border: 2px solid var(--paper-border);
   border-radius: 0;
   padding: 40px;
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
@@ -93,11 +187,14 @@ body::before {
   text-align: center;
   position: relative;
   z-index: 2;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .game-title {
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 10px;
   text-decoration: underline;
   text-decoration-color: #3498db;
@@ -109,8 +206,9 @@ body::before {
 
 .author-credit {
   margin-bottom: 40px;
-  color: #555;
+  color: var(--text-color);
   font-size: 0.9rem;
+  opacity: 0.8;
 }
 
 .author-credit a {
@@ -129,7 +227,7 @@ body::before {
 
 .mode-selection h2 {
   font-size: 1.2rem;
-  color: #2c3e50;
+  color: var(--text-color);
   margin-bottom: 20px;
   text-decoration: underline;
   text-decoration-style: wavy;
@@ -145,9 +243,9 @@ body::before {
 .mode-btn {
   padding: 15px 30px;
   font-size: 1.1rem;
-  border: 3px solid #2c3e50;
-  background: white;
-  color: #2c3e50;
+  border: 3px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--button-text);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -157,7 +255,7 @@ body::before {
 }
 
 .mode-btn:hover {
-  background: #ecf0f1;
+  background: var(--button-hover);
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
@@ -177,7 +275,9 @@ body::before {
 .action-btn {
   padding: 12px 25px;
   font-size: 1rem;
-  border: 3px solid #2c3e50;
+  border: 3px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--button-text);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -186,13 +286,13 @@ body::before {
 }
 
 .continue-btn {
-  background: #2ecc71;
+  background: var(--continue-btn-bg);
   color: white;
-  border-color: #27ae60;
+  border-color: var(--continue-btn-border);
 }
 
 .continue-btn:hover:not(:disabled) {
-  background: #27ae60;
+  background: var(--continue-btn-hover);
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
@@ -200,20 +300,20 @@ body::before {
 .continue-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: #95a5a6;
-  border-color: #7f8c8d;
+  background: var(--continue-btn-disabled);
+  border-color: var(--continue-btn-disabled-border);
 }
 
 .settings-btn,
 .results-btn {
-  background: #f39c12;
+  background: var(--settings-btn-bg);
   color: white;
-  border-color: #e67e22;
+  border-color: var(--settings-btn-border);
 }
 
 .settings-btn:hover,
 .results-btn:hover {
-  background: #e67e22;
+  background: var(--settings-btn-hover);
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
@@ -320,18 +420,21 @@ body::before {
 }
 
 .game-paper {
-  background: #faf0e6;
+  background: var(--paper-bg);
   background-image:
-    linear-gradient(rgba(173, 216, 230, 0.2) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(173, 216, 230, 0.2) 1px, transparent 1px);
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
   background-size: 20px 20px;
-  border: 2px solid #8b7355;
+  border: 2px solid var(--paper-border);
   padding: 30px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   position: relative;
   width: 100%;
   max-width: 900px;
   min-height: 513px;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .game-paper::before,
@@ -341,7 +444,7 @@ body::before {
   width: 100%;
   height: 20px;
   left: 0;
-  background: #faf0e6;
+  background: var(--paper-bg);
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,10 Q20,0 40,10 T80,10 T120,10 T160,10 T200,10 T240,10 T280,10 T320,10 T360,10 T400,10 T440,10 T480,10 T520,10 T560,10 T600,10 T640,10 T680,10 T720,10 T760,10 T800,10 T840,10 T880,10' fill='none' stroke='%238b7355' stroke-width='2'/%3E%3C/svg%3E");
   mask-size: 100% 100%;
   mask-repeat: repeat-x;
@@ -362,7 +465,7 @@ body::before {
   align-items: center;
   margin-bottom: 30px;
   padding-bottom: 15px;
-  border-bottom: 2px solid #8b7355;
+  border-bottom: 2px solid var(--paper-border);
   gap: 20px;
 }
 
@@ -373,7 +476,7 @@ body::before {
   border: none;
   background: transparent;
   box-shadow: none;
-  color: #2c3e50;
+  color: var(--text-color);
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
@@ -397,12 +500,12 @@ body::before {
 
 .current-score,
 .target-score {
-  color: #2c3e50;
+  color: var(--text-color);
 }
 
 .current-score strong,
 .target-score strong {
-  color: #e74c3c;
+  color: var(--score-color);
   font-size: 1.3rem;
 }
 
@@ -411,7 +514,7 @@ body::before {
   align-items: center;
   gap: 5px;
   font-size: 0.9rem;
-  color: #2c3e50;
+  color: var(--text-color);
   cursor: pointer;
   user-select: none;
 }
@@ -433,7 +536,7 @@ body::before {
 .timer-display {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--text-color);
   font-family: 'Courier New', monospace;
 }
 
@@ -443,7 +546,7 @@ body::before {
   padding: 0;
   border: none;
   background: transparent;
-  color: #2c3e50;
+  color: var(--text-color);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -476,7 +579,7 @@ body::before {
   padding: 0;
   border: none;
   background: transparent;
-  color: #2c3e50;
+  color: var(--text-color);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -494,11 +597,11 @@ body::before {
 }
 
 .theme-btn {
-  background: #95a5a6;
+  background: var(--button-bg);
 }
 
 .theme-btn:hover {
-  background: #7f8c8d;
+  background: var(--button-hover);
 }
 
 .game-content {
@@ -536,14 +639,14 @@ body::before {
 
 .grid-cell {
   aspect-ratio: 1;
-  background: white;
-  border: 1px solid #ddd;
+  background: var(--cell-bg);
+  border: 1px solid var(--cell-border);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.85rem;
   font-weight: bold;
-  color: #2c3e50;
+  color: var(--cell-text);
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 28px;
@@ -551,14 +654,14 @@ body::before {
 }
 
 .grid-cell.has-number:hover {
-  background: #fffacd;
+  background: var(--cell-hover);
   transform: scale(1.05);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .grid-cell.selected {
-  background: #ffeb3b;
-  border: 2px solid #f57f17;
+  background: var(--cell-selected);
+  border: 2px solid var(--cell-selected-border);
   transform: scale(1.1);
 }
 
@@ -566,8 +669,8 @@ body::before {
   position: relative;
   opacity: 0.4;
   pointer-events: none;
-  background: #f5f5f5;
-  color: #999;
+  background: var(--cell-bg);
+  color: var(--cell-text);
 }
 
 .grid-cell.crossed-out::before,
@@ -599,9 +702,9 @@ body::before {
 .control-btn {
   padding: 10px 20px;
   font-size: 0.9rem;
-  border: 2px solid #2c3e50;
-  background: white;
-  color: #2c3e50;
+  border: 2px solid var(--button-border);
+  background: var(--button-bg);
+  color: var(--button-text);
   border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -622,7 +725,7 @@ body::before {
 }
 
 .control-btn:hover {
-  background: #ecf0f1;
+  background: var(--button-hover);
   transform: translate(1px, 1px);
   box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.2);
 }
@@ -633,45 +736,35 @@ body::before {
 }
 
 .reset-btn {
-  background: #e74c3c;
+  background: var(--reset-btn-bg);
   color: white;
-  border-color: #c0392b;
+  border-color: var(--reset-btn-border);
 }
 
 .reset-btn:hover {
-  background: #c0392b;
+  background: var(--reset-btn-hover);
 }
 
 .save-btn {
-  background: #3498db;
+  background: var(--save-btn-bg);
   color: white;
-  border-color: #2980b9;
+  border-color: var(--save-btn-border);
 }
 
 .save-btn:hover {
-  background: #2980b9;
-}
-
-.continue-btn {
-  background: #2ecc71;
-  color: white;
-  border-color: #27ae60;
-}
-
-.continue-btn:hover {
-  background: #27ae60;
+  background: var(--save-btn-hover);
 }
 
 .helper-btn {
-  background: #f39c12;
+  background: var(--helper-btn-bg);
   color: white;
-  border-color: #e67e22;
+  border-color: var(--helper-btn-border);
   font-size: 0.85rem;
   padding: 8px 15px;
 }
 
 .helper-btn:hover {
-  background: #e67e22;
+  background: var(--helper-btn-hover);
 }
 
 @media (max-width: 767px) {
@@ -745,20 +838,21 @@ body::before {
 }
 
 .modal-content {
-  background-color: #f5f5dc;
+  background-color: var(--modal-bg);
   padding: 30px;
   border-radius: 8px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   max-width: 400px;
   width: 90%;
   text-align: center;
+  transition: background-color 0.3s ease;
 }
 
 .modal-title {
   margin: 0 0 20px 0;
   font-family: 'Comic Sans MS', cursive;
   font-size: 1.5rem;
-  color: #2c3e50;
+  color: var(--modal-text);
 }
 
 .settings-container {
@@ -772,14 +866,15 @@ body::before {
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: var(--cell-bg);
   border-radius: 5px;
+  transition: background-color 0.3s ease;
 }
 
 .setting-label {
   font-family: 'Comic Sans MS', cursive;
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--text-color);
 }
 
 .setting-toggle {
@@ -795,15 +890,18 @@ body::before {
   text-align: center;
   font-size: 1.1rem;
   margin: 15px 0;
-  color: #2c3e50;
+  color: var(--text-color);
 }
 
 .results-info {
   margin: 20px 0;
   padding: 15px;
-  background: #f8f9fa;
+  background: var(--cell-bg);
   border-radius: 8px;
-  border: 2px solid #dee2e6;
+  border: 2px solid var(--cell-border);
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .result-item {
@@ -815,11 +913,11 @@ body::before {
 
 .result-label {
   font-weight: bold;
-  color: #495057;
+  color: var(--text-color);
 }
 
 .result-value {
-  color: #212529;
+  color: var(--text-color);
   font-weight: 600;
 }
 
@@ -856,16 +954,17 @@ body::before {
 
 .results-table td {
   padding: 10px 12px;
-  border: 1px solid #dee2e6;
-  background: white;
+  border: 1px solid var(--cell-border);
+  background: var(--cell-bg);
+  color: var(--cell-text);
 }
 
 .results-table tbody tr:nth-child(even) {
-  background: #f8f9fa;
+  background: var(--paper-bg);
 }
 
 .results-table tbody tr:hover {
-  background: #e9ecef;
+  background: var(--button-hover);
 }
 
 .results-table .win-row {

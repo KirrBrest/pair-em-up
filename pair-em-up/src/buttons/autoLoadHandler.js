@@ -1,3 +1,5 @@
+import { ThemeManager } from '../utils/ThemeManager.js';
+
 export class AutoLoadHandler {
   constructor(gameScreen) {
     this.gameScreen = gameScreen;
@@ -10,6 +12,12 @@ export class AutoLoadHandler {
     }
 
     const gameState = JSON.parse(savedGame);
+
+    if (gameState.theme) {
+      ThemeManager.applyTheme(gameState.theme);
+      this.gameScreen.updateSettingsIcon();
+      this.gameScreen.updateButtons();
+    }
     this.gameScreen.gameLogic.grid = gameState.grid;
     this.gameScreen.gameLogic.score = gameState.score || 0;
     this.gameScreen.gameLogic.elapsedTime = gameState.elapsedTime || 0;

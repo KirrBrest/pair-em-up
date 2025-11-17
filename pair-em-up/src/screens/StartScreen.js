@@ -2,10 +2,12 @@ import { Button } from '../components/Button.js';
 import { GameScreen } from './GameScreen.js';
 import { AutoLoadHandler } from '../buttons/autoLoadHandler.js';
 import { ResultsManager } from '../results/ResultsManager.js';
+import { ThemeManager } from '../utils/ThemeManager.js';
 
 export class StartScreen {
   constructor() {
     this.container = null;
+    ThemeManager.init();
     this.init();
   }
 
@@ -97,7 +99,7 @@ export class StartScreen {
       text: 'Settings',
       className: 'action-btn settings-btn',
       onClick: () => {
-        console.log('Settings clicked');
+        this.showSettingsModal();
       },
     });
     const resultsBtn = Button.create({
@@ -108,18 +110,9 @@ export class StartScreen {
       },
     });
 
-    const themeBtn = Button.create({
-      text: 'Theme',
-      className: 'action-btn theme-btn',
-      onClick: () => {
-        console.log('Theme toggle clicked');
-      },
-    });
-
     gameActions.appendChild(continueBtn);
     gameActions.appendChild(settingsBtn);
     gameActions.appendChild(resultsBtn);
-    gameActions.appendChild(themeBtn);
 
     startScreen.appendChild(title);
     startScreen.appendChild(authorCredit);
@@ -241,6 +234,120 @@ export class StartScreen {
       numberSelection: 'Number Selection',
     };
     return modeMap[mode] || mode;
+  }
+
+  showSettingsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+
+    const title = document.createElement('h2');
+    title.className = 'modal-title';
+    title.textContent = 'Settings';
+
+    const settingsContainer = document.createElement('div');
+    settingsContainer.className = 'settings-container';
+
+    const audioContainer = document.createElement('div');
+    audioContainer.className = 'setting-item';
+
+    const audioLabel = document.createElement('span');
+    audioLabel.className = 'setting-label';
+    audioLabel.textContent = 'Audio';
+
+    const audioToggle = document.createElement('button');
+    audioToggle.className = 'control-btn setting-toggle';
+    const audioEnabled = localStorage.getItem('pairEmUpAudio') !== 'false';
+    audioToggle.textContent = audioEnabled ? 'ON' : 'OFF';
+    audioToggle.addEventListener('click', () => {
+      const currentState = localStorage.getItem('pairEmUpAudio') !== 'false';
+      const newState = !currentState;
+      localStorage.setItem('pairEmUpAudio', String(newState));
+      audioToggle.textContent = newState ? 'ON' : 'OFF';
+    });
+
+    audioContainer.appendChild(audioLabel);
+    audioContainer.appendChild(audioToggle);
+
+    const musicContainer = document.createElement('div');
+    musicContainer.className = 'setting-item';
+
+    const musicLabel = document.createElement('span');
+    musicLabel.className = 'setting-label';
+    musicLabel.textContent = 'Music';
+
+    const musicCheckbox = document.createElement('input');
+    musicCheckbox.type = 'checkbox';
+    musicCheckbox.className = 'play-to-end-checkbox';
+    const musicEnabled = localStorage.getItem('pairEmUpMusic') !== 'false';
+    musicCheckbox.checked = musicEnabled;
+    musicCheckbox.addEventListener('change', () => {
+      localStorage.setItem('pairEmUpMusic', String(musicCheckbox.checked));
+    });
+
+    const musicLabelWrapper = document.createElement('label');
+    musicLabelWrapper.className = 'play-to-end-label';
+    musicLabelWrapper.appendChild(musicCheckbox);
+    musicLabelWrapper.appendChild(document.createTextNode(' '));
+    musicLabelWrapper.appendChild(musicLabel);
+
+    musicContainer.appendChild(musicLabelWrapper);
+
+    const themeContainer = document.createElement('div');
+    themeContainer.className = 'setting-item';
+
+    const themeLabel = document.createElement('span');
+    themeLabel.className = 'setting-label';
+    themeLabel.textContent = 'Theme';
+
+    const themeToggle = document.createElement('button');
+    themeToggle.className = 'control-btn setting-toggle';
+    const themeMode = ThemeManager.getCurrentTheme();
+    themeToggle.textContent = themeMode === 'dark' ? 'Dark' : 'Light';
+    themeToggle.addEventListener('click', () => {
+      const newTheme = ThemeManager.toggleTheme();
+      themeToggle.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+      this.updateButtons();
+    });
+
+    themeContainer.appendChild(themeLabel);
+    themeContainer.appendChild(themeToggle);
+
+    settingsContainer.appendChild(audioContainer);
+    settingsContainer.appendChild(musicContainer);
+    settingsContainer.appendChild(themeContainer);
+
+    const closeBtn = Button.create({
+      text: 'Close',
+      className: 'action-btn',
+      onClick: () => {
+        document.body.removeChild(modal);
+      },
+    });
+
+    modalContent.appendChild(title);
+    modalContent.appendChild(settingsContainer);
+    modalContent.appendChild(closeBtn);
+    modal.appendChild(modalContent);
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  }
+
+  updateButtons() {
+    const buttons = document.querySelectorAll('.action-btn, .control-btn, .mode-btn');
+    buttons.forEach((btn) => {
+      btn.style.backgroundColor = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    });
   }
 
   showNumberSelectionModal() {

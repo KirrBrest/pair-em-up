@@ -27,6 +27,7 @@ export class SaveHandler {
       helperCounts: this.gameScreen.helperCounts || {},
       crossedOutCells: crossedOutCells,
       playToEnd: this.gameScreen.playToEnd || false,
+      theme: localStorage.getItem('pairEmUpTheme') || 'light',
     };
 
     localStorage.setItem('pairEmUpGame', JSON.stringify(gameState));

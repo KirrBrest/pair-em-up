@@ -8,6 +8,7 @@ import { BackHandler } from '../buttons/backHandler.js';
 import { StartScreen } from './StartScreen.js';
 import { MixHandler } from '../buttons/mixHandler.js';
 import { AutoSaveHandler } from '../buttons/autoSaveHandler.js';
+import { AddNumbersHandler } from '../buttons/addNumbersHandler.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -296,7 +297,10 @@ export class GameScreen {
 
     if (this.selectedCells.length === 2) {
       const [cell1, cell2] = this.selectedCells;
-      if (this.gameLogic.isValidPair(cell1.row, cell1.col, cell2.row, cell2.col)) {
+      const crossedOutPositions = this.getCrossedOutPositions();
+      if (
+        this.gameLogic.isValidPair(cell1.row, cell1.col, cell2.row, cell2.col, crossedOutPositions)
+      ) {
         this.crossOutPair(cell1, cell2);
         this.updateScore();
       } else {
@@ -312,6 +316,19 @@ export class GameScreen {
       cell.element.classList.remove('selected');
     });
     this.selectedCells = [];
+  }
+
+  getCrossedOutPositions() {
+    const crossedOutPositions = new Set();
+    const gridCells = document.querySelectorAll('.grid-cell.crossed-out');
+    gridCells.forEach((cell) => {
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      if (!isNaN(row) && !isNaN(col)) {
+        crossedOutPositions.add(`${row},${col}`);
+      }
+    });
+    return crossedOutPositions;
   }
 
   crossOutPair(cell1, cell2) {
@@ -446,15 +463,16 @@ export class GameScreen {
         className: 'control-btn helper-btn',
         onClick: () => {
           if (helper.text === 'Eraser') {
-            if (!this.eraserMode) {
-              this.toggleEraserMode();
-            }
+            this.toggleEraserMode();
           } else if (helper.text === 'Back') {
             const backHandler = new BackHandler(this);
             backHandler.handle();
           } else if (helper.text === 'Mix') {
             const mixHandler = new MixHandler(this);
             mixHandler.handle();
+          } else if (helper.text === 'Add Numbers') {
+            const addNumbersHandler = new AddNumbersHandler(this);
+            addNumbersHandler.handle();
           } else {
             console.log(`${helper.text} clicked`);
           }
@@ -484,7 +502,8 @@ export class GameScreen {
     if (eraserBtn) {
       if (this.eraserMode) {
         eraserBtn.classList.add('active');
-        eraserBtn.textContent = eraserBtn.textContent.replace('Eraser', 'Cancel');
+        const remaining = 5 - (this.helperCounts.eraser || 0);
+        eraserBtn.textContent = `Cancel (${remaining})`;
       } else {
         eraserBtn.classList.remove('active');
         const remaining = 5 - (this.helperCounts.eraser || 0);

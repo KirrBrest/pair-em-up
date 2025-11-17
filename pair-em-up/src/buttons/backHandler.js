@@ -19,8 +19,6 @@ export class BackHandler {
     if (previousState.actionType === 'eraser' && previousState.actionData) {
       const { row, col, value } = previousState.actionData;
       this.gameScreen.gameLogic.grid[row][col] = value;
-    } else if (previousState.actionType === 'mix') {
-      this.gameScreen.helperCounts = { ...previousState.helperCounts };
     } else {
       this.gameScreen.helperCounts = { ...previousState.helperCounts };
     }

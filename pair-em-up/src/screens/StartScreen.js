@@ -68,7 +68,7 @@ export class StartScreen {
       text: 'Number Selection',
       className: 'mode-btn',
       onClick: () => {
-        new GameScreen('numberSelection', { tensDigit: 1 });
+        this.showNumberSelectionModal();
       },
     });
 
@@ -154,6 +154,79 @@ export class StartScreen {
     }
   }
 
+  showNumberSelectionModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    `;
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    modalContent.style.cssText = `
+      background-color: #f5f5dc;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = 'Select a digit from 1 to 9';
+    title.style.cssText = `
+      margin: 0 0 20px 0;
+      font-family: 'Comic Sans MS', cursive;
+      font-size: 1.5rem;
+      color: #2c3e50;
+    `;
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 20px;
+    `;
+
+    for (let i = 1; i <= 9; i++) {
+      const digitBtn = Button.create({
+        text: String(i),
+        className: 'mode-btn',
+        onClick: () => {
+          document.body.removeChild(modal);
+          new GameScreen('numberSelection', { selectedDigit: i });
+        },
+      });
+      digitBtn.style.cssText = `
+        font-size: 1.5rem;
+        padding: 15px;
+      `;
+      buttonsContainer.appendChild(digitBtn);
+    }
+
+    modalContent.appendChild(title);
+    modalContent.appendChild(buttonsContainer);
+    modal.appendChild(modalContent);
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  }
+
   createBackgroundText() {
     const body = document.body;
 
@@ -166,7 +239,7 @@ export class StartScreen {
 
     const lines = [
       'London is the capital of Great Britain.',
-      'Sofy and Stefany are the best sisters in the world.',
+      'Sophie and Stephanie are the best sisters in the world - my dear daughters. :)',
       'The cat sat on the mat.',
       'I like to play games with my friends.',
       'The sun shines bright in the sky.',

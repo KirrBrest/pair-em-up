@@ -26,8 +26,8 @@ export class GameLogic {
         this.grid = this.generateChaoticGrid(rows, cols);
         break;
       case 'numberSelection': {
-        const tensDigit = this.options.tensDigit || 1;
-        this.grid = this.generateNumberSelectionGrid(rows, cols, tensDigit);
+        const selectedDigit = this.options.selectedDigit || 1;
+        this.grid = this.generateNumberSelectionGrid(rows, cols, selectedDigit);
         break;
       }
       default:
@@ -35,8 +35,7 @@ export class GameLogic {
     }
   }
 
-  generateClassicGrid(rows, cols) {
-    const grid = [];
+  generateClassicDigits() {
     const digits = [];
 
     for (let i = 1; i <= 9; i++) {
@@ -49,6 +48,13 @@ export class GameLogic {
         digits.push(ones);
       }
     }
+
+    return digits;
+  }
+
+  generateClassicGrid(rows, cols) {
+    const grid = [];
+    const digits = this.generateClassicDigits();
 
     let index = 0;
     for (let row = 0; row < rows; row++) {
@@ -67,18 +73,9 @@ export class GameLogic {
   }
 
   generateRandomGrid(rows, cols) {
-    const digits = [];
-
-    for (let i = 1; i <= 9; i++) {
-      digits.push(i);
-    }
-
-    for (let tens = 1; tens <= 9; tens++) {
-      for (let ones = 1; ones <= 9; ones++) {
-        digits.push(tens);
-        digits.push(ones);
-      }
-    }
+    const allDigits = this.generateClassicDigits();
+    const totalCells = rows * cols;
+    const digits = allDigits.slice(0, totalCells);
 
     for (let i = digits.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -125,7 +122,7 @@ export class GameLogic {
     return grid;
   }
 
-  generateNumberSelectionGrid(rows, cols, tensDigit) {
+  generateNumberSelectionGrid(rows, cols, selectedDigit) {
     const grid = [];
     const firstRow = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     grid.push(firstRow);
@@ -133,8 +130,11 @@ export class GameLogic {
     for (let row = 1; row < rows; row++) {
       const rowData = [];
       for (let onesDigit = 1; onesDigit <= 9; onesDigit++) {
-        const number = tensDigit * 10 + onesDigit;
-        rowData.push(number);
+        rowData.push(selectedDigit);
+        rowData.push(onesDigit);
+      }
+      if (rowData.length > cols) {
+        rowData.splice(cols);
       }
       grid.push(rowData);
     }
@@ -169,7 +169,7 @@ export class GameLogic {
     this.initializeGrid();
   }
 
-  areNeighbors(row1, col1, row2, col2) {
+  areNeighbors(row1, col1, row2, col2, crossedOutPositions = null) {
     if (row1 === row2 && col1 === col2) {
       return false;
     }
@@ -187,11 +187,22 @@ export class GameLogic {
       return true;
     }
 
+    const isCellActive = (row, col) => {
+      if (this.grid[row][col] === null) {
+        return false;
+      }
+      if (crossedOutPositions) {
+        const posKey = `${row},${col}`;
+        return !crossedOutPositions.has(posKey);
+      }
+      return true;
+    };
+
     if (sameRow) {
       const minCol = Math.min(col1, col2);
       const maxCol = Math.max(col1, col2);
       for (let c = minCol + 1; c < maxCol; c++) {
-        if (this.grid[row1][c] !== null) {
+        if (isCellActive(row1, c)) {
           return false;
         }
       }
@@ -202,7 +213,7 @@ export class GameLogic {
       const minRow = Math.min(row1, row2);
       const maxRow = Math.max(row1, row2);
       for (let r = minRow + 1; r < maxRow; r++) {
-        if (this.grid[r][col1] !== null) {
+        if (isCellActive(r, col1)) {
           return false;
         }
       }
@@ -210,10 +221,10 @@ export class GameLogic {
     }
 
     if (adjacentRows) {
-      const lastColRow1 = this.getLastNonEmptyCol(row1);
-      const firstColRow2 = this.getFirstNonEmptyCol(row2);
-      const lastColRow2 = this.getLastNonEmptyCol(row2);
-      const firstColRow1 = this.getFirstNonEmptyCol(row1);
+      const lastColRow1 = this.getLastNonEmptyCol(row1, crossedOutPositions);
+      const firstColRow2 = this.getFirstNonEmptyCol(row2, crossedOutPositions);
+      const lastColRow2 = this.getLastNonEmptyCol(row2, crossedOutPositions);
+      const firstColRow1 = this.getFirstNonEmptyCol(row1, crossedOutPositions);
 
       if (row2 === row1 + 1 && col1 === lastColRow1 && col2 === firstColRow2) {
         return true;
@@ -224,28 +235,69 @@ export class GameLogic {
       }
     }
 
+    const rowDiff = Math.abs(row1 - row2);
+    if (rowDiff > 1) {
+      const minRow = Math.min(row1, row2);
+      const maxRow = Math.max(row1, row2);
+
+      for (let r = minRow + 1; r < maxRow; r++) {
+        for (let c = 0; c < this.grid[r].length; c++) {
+          if (isCellActive(r, c)) {
+            return false;
+          }
+        }
+      }
+
+      const lastColRow1 = this.getLastNonEmptyCol(row1, crossedOutPositions);
+      const firstColRow2 = this.getFirstNonEmptyCol(row2, crossedOutPositions);
+      const lastColRow2 = this.getLastNonEmptyCol(row2, crossedOutPositions);
+      const firstColRow1 = this.getFirstNonEmptyCol(row1, crossedOutPositions);
+
+      if (row1 < row2 && col1 === lastColRow1 && col2 === firstColRow2) {
+        return true;
+      }
+
+      if (row1 > row2 && col1 === firstColRow1 && col2 === lastColRow2) {
+        return true;
+      }
+    }
+
     return false;
   }
 
-  getLastNonEmptyCol(row) {
+  getLastNonEmptyCol(row, crossedOutPositions = null) {
     for (let col = this.grid[row].length - 1; col >= 0; col--) {
       if (this.grid[row][col] !== null) {
-        return col;
+        if (crossedOutPositions) {
+          const posKey = `${row},${col}`;
+          if (!crossedOutPositions.has(posKey)) {
+            return col;
+          }
+        } else {
+          return col;
+        }
       }
     }
     return -1;
   }
 
-  getFirstNonEmptyCol(row) {
+  getFirstNonEmptyCol(row, crossedOutPositions = null) {
     for (let col = 0; col < this.grid[row].length; col++) {
       if (this.grid[row][col] !== null) {
-        return col;
+        if (crossedOutPositions) {
+          const posKey = `${row},${col}`;
+          if (!crossedOutPositions.has(posKey)) {
+            return col;
+          }
+        } else {
+          return col;
+        }
       }
     }
     return -1;
   }
 
-  isValidPair(row1, col1, row2, col2) {
+  isValidPair(row1, col1, row2, col2, crossedOutPositions = null) {
     if (
       row1 < 0 ||
       row1 >= this.grid.length ||
@@ -266,7 +318,15 @@ export class GameLogic {
       return false;
     }
 
-    if (!this.areNeighbors(row1, col1, row2, col2)) {
+    if (crossedOutPositions) {
+      const pos1Key = `${row1},${col1}`;
+      const pos2Key = `${row2},${col2}`;
+      if (crossedOutPositions.has(pos1Key) || crossedOutPositions.has(pos2Key)) {
+        return false;
+      }
+    }
+
+    if (!this.areNeighbors(row1, col1, row2, col2, crossedOutPositions)) {
       return false;
     }
 

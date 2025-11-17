@@ -26,6 +26,7 @@ export class SaveHandler {
         : null,
       helperCounts: this.gameScreen.helperCounts || {},
       crossedOutCells: crossedOutCells,
+      playToEnd: this.gameScreen.playToEnd || false,
     };
 
     localStorage.setItem('pairEmUpGame', JSON.stringify(gameState));

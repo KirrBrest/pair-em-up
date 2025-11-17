@@ -10,6 +10,9 @@ import { MixHandler } from '../buttons/mixHandler.js';
 import { AutoSaveHandler } from '../buttons/autoSaveHandler.js';
 import { AddNumbersHandler } from '../buttons/addNumbersHandler.js';
 import { SoundManager } from '../audio/SoundManager.js';
+import { GameEndChecker } from '../game/GameEndChecker.js';
+import { ResultsManager } from '../results/ResultsManager.js';
+import { GameResultsModal } from '../results/GameResultsModal.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -27,6 +30,9 @@ export class GameScreen {
     this.previousState = null;
     this.backUsed = false;
     this.soundManager = new SoundManager();
+    this.totalMoves = 0;
+    this.gameEnded = false;
+    this.playToEnd = false;
     this.init();
   }
 
@@ -120,8 +126,22 @@ export class GameScreen {
     targetScoreStrong.textContent = this.gameLogic.targetScore;
     targetScore.appendChild(targetScoreStrong);
 
+    const playToEndLabel = document.createElement('label');
+    playToEndLabel.className = 'play-to-end-label';
+    const playToEndCheckbox = document.createElement('input');
+    playToEndCheckbox.type = 'checkbox';
+    playToEndCheckbox.className = 'play-to-end-checkbox';
+    playToEndCheckbox.checked = this.playToEnd;
+    playToEndCheckbox.addEventListener('change', (e) => {
+      this.playToEnd = e.target.checked;
+    });
+    this.playToEndCheckbox = playToEndCheckbox;
+    playToEndLabel.appendChild(playToEndCheckbox);
+    playToEndLabel.appendChild(document.createTextNode(' Play to end'));
+
     scoreDisplay.appendChild(currentScore);
     scoreDisplay.appendChild(targetScore);
+    scoreDisplay.appendChild(playToEndLabel);
 
     const timerDisplay = document.createElement('div');
     timerDisplay.className = 'timer-display';
@@ -299,8 +319,10 @@ export class GameScreen {
         this.gameLogic.isValidPair(cell1.row, cell1.col, cell2.row, cell2.col, crossedOutPositions)
       ) {
         this.crossOutPair(cell1, cell2);
+        this.totalMoves++;
         this.updateScore();
         this.soundManager.playValidPair();
+        this.checkGameEnd();
       } else {
         this.soundManager.playInvalidPair();
         setTimeout(() => {
@@ -452,10 +474,54 @@ export class GameScreen {
     if (scoreDisplay) {
       scoreDisplay.textContent = this.gameLogic.score;
     }
+  }
 
-    if (this.gameLogic.score >= this.gameLogic.targetScore) {
-      this.soundManager.playGameEnd();
+  checkGameEnd() {
+    if (this.gameEnded) {
+      return;
     }
+
+    setTimeout(() => {
+      if (this.gameEnded) {
+        return;
+      }
+
+      const endChecker = new GameEndChecker(this.gameLogic, this.helperCounts, this.playToEnd);
+      const won = endChecker.checkWin();
+      const lost = endChecker.checkLoss();
+
+      if (won || lost) {
+        this.gameEnded = true;
+        this.gameLogic.stopTimer();
+        this.soundManager.playGameEnd();
+
+        const totalSeconds = Math.floor(this.gameLogic.elapsedTime / 1000);
+        const completionTime = ResultsManager.formatTime(totalSeconds);
+        const result = {
+          mode: this.mode,
+          finalScore: this.gameLogic.score,
+          completionTime: completionTime,
+          totalMoves: this.totalMoves,
+          won: won,
+          timestamp: Date.now(),
+        };
+
+        ResultsManager.saveResult(result);
+
+        setTimeout(() => {
+          const resultsModal = new GameResultsModal(this, result);
+          resultsModal.show();
+        }, 500);
+      }
+    }, 100);
+  }
+
+  restartGame() {
+    const appWrapper = document.querySelector('.app-wrapper');
+    while (appWrapper.firstChild) {
+      appWrapper.removeChild(appWrapper.firstChild);
+    }
+    const newGameScreen = new GameScreen(this.mode, this.options);
   }
 
   createGameContent() {
@@ -552,10 +618,12 @@ export class GameScreen {
             const mixHandler = new MixHandler(this);
             mixHandler.handle();
             this.soundManager.playHelperUse();
+            this.checkGameEnd();
           } else if (helper.text === 'Add Numbers') {
             const addNumbersHandler = new AddNumbersHandler(this);
             addNumbersHandler.handle();
             this.soundManager.playHelperUse();
+            this.checkGameEnd();
           } else {
             console.log(`${helper.text} clicked`);
           }
@@ -600,6 +668,7 @@ export class GameScreen {
     eraserHandler.handle(cell);
     this.toggleEraserMode();
     this.soundManager.playHelperUse();
+    this.checkGameEnd();
   }
 
   updateHelperButton(helperName, remaining) {

@@ -22,6 +22,13 @@ export class AutoLoadHandler {
       this.gameScreen.helperCounts = gameState.helperCounts;
     }
 
+    if (gameState.playToEnd !== undefined) {
+      this.gameScreen.playToEnd = gameState.playToEnd;
+      if (this.gameScreen.playToEndCheckbox) {
+        this.gameScreen.playToEndCheckbox.checked = this.gameScreen.playToEnd;
+      }
+    }
+
     const savedPreviousState = localStorage.getItem('pairEmUpPreviousState');
     if (savedPreviousState) {
       try {

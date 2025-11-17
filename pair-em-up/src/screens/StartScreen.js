@@ -1,6 +1,7 @@
 import { Button } from '../components/Button.js';
 import { GameScreen } from './GameScreen.js';
 import { AutoLoadHandler } from '../buttons/autoLoadHandler.js';
+import { ResultsManager } from '../results/ResultsManager.js';
 
 export class StartScreen {
   constructor() {
@@ -103,7 +104,7 @@ export class StartScreen {
       text: 'Results',
       className: 'action-btn results-btn',
       onClick: () => {
-        console.log('Results clicked');
+        this.showResultsTable();
       },
     });
 
@@ -148,6 +149,98 @@ export class StartScreen {
     const gameScreen = new GameScreen(mode, options);
     const autoLoadHandler = new AutoLoadHandler(gameScreen);
     autoLoadHandler.handle();
+  }
+
+  showResultsTable() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content results-table-modal';
+
+    const title = document.createElement('h2');
+    title.className = 'modal-title';
+    title.textContent = 'Game Results';
+
+    const results = ResultsManager.getResults();
+    const table = document.createElement('table');
+    table.className = 'results-table';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    headerRow.innerHTML = `
+      <th>Mode</th>
+      <th>Score</th>
+      <th>Time</th>
+      <th>Moves</th>
+      <th>Result</th>
+    `;
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    if (results.length === 0) {
+      const emptyRow = document.createElement('tr');
+      const emptyCell = document.createElement('td');
+      emptyCell.colSpan = 5;
+      emptyCell.textContent = 'No games completed yet';
+      emptyCell.className = 'empty-results';
+      emptyRow.appendChild(emptyCell);
+      tbody.appendChild(emptyRow);
+    } else {
+      const sortedResults = [...results].sort((a, b) => {
+        const timeA = ResultsManager.parseTime(a.completionTime);
+        const timeB = ResultsManager.parseTime(b.completionTime);
+        return timeA - timeB;
+      });
+
+      sortedResults.forEach((result) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${this.formatMode(result.mode)}</td>
+          <td>${result.finalScore}</td>
+          <td>${result.completionTime}</td>
+          <td>${result.totalMoves}</td>
+          <td>${result.won ? '⭐ Win' : 'Loss'}</td>
+        `;
+        if (result.won) {
+          row.classList.add('win-row');
+        }
+        tbody.appendChild(row);
+      });
+    }
+    table.appendChild(tbody);
+
+    const closeBtn = Button.create({
+      text: 'Close',
+      className: 'action-btn',
+      onClick: () => {
+        document.body.removeChild(modal);
+      },
+    });
+
+    modalContent.appendChild(title);
+    modalContent.appendChild(table);
+    modalContent.appendChild(closeBtn);
+    modal.appendChild(modalContent);
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
+  }
+
+  formatMode(mode) {
+    const modeMap = {
+      classic: 'Classic',
+      random: 'Random',
+      chaotic: 'Chaotic',
+      numberSelection: 'Number Selection',
+    };
+    return modeMap[mode] || mode;
   }
 
   showNumberSelectionModal() {

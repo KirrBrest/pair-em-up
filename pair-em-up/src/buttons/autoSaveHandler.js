@@ -26,6 +26,7 @@ export class AutoSaveHandler {
         : null,
       helperCounts: this.gameScreen.helperCounts || {},
       crossedOutCells: crossedOutCells,
+      playToEnd: this.gameScreen.playToEnd || false,
     };
 
     localStorage.setItem('pairEmUpAutoSave', JSON.stringify(gameState));

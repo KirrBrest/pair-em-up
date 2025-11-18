@@ -812,19 +812,56 @@ body::before {
 }
 
 @media (max-width: 767px) {
+  body {
+    padding: 2px;
+    overflow-x: hidden;
+  }
+
+  .app-wrapper {
+    width: 100%;
+    padding: 0;
+  }
+
+  .game-container {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+
   .game-paper {
-    padding: 20px;
+    padding: 5px;
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+  }
+
+  .grid-container {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .game-grid {
+    max-height: none;
+    overflow-y: visible;
+    width: fit-content;
+    grid-template-columns: repeat(9, minmax(28px, auto));
+    padding: 3px;
   }
 
   .game-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+    padding: 10px 5px;
   }
 
   .game-header .home-btn {
     font-size: 0.75rem;
-    padding: 6px 12px;
+    padding: 6px 0 6px 0;
+    align-self: flex-start;
+    margin-right: auto;
+    text-align: left;
+    justify-content: flex-start;
   }
 
   .score-display {
@@ -855,6 +892,7 @@ body::before {
   .game-content {
     flex-direction: column;
     align-items: stretch;
+    padding: 5px;
   }
 
   .left-controls,

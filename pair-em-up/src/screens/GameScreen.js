@@ -29,6 +29,7 @@ export class GameScreen {
       addnumbers: 0,
     };
     this.eraserMode = false;
+    this.helpMode = false;
     this.previousState = null;
     this.backUsed = false;
     this.soundManager = new SoundManager();
@@ -47,6 +48,7 @@ export class GameScreen {
     this.gameLogic.startTimer();
     this.updateTimer();
     this.setupAutoSave();
+    this.updateHints();
     this.soundManager.playGameStart();
     setTimeout(() => {
       this.musicManager.play();
@@ -150,6 +152,11 @@ export class GameScreen {
     scoreDisplay.appendChild(targetScore);
     scoreDisplay.appendChild(playToEndLabel);
 
+    const hintsDisplay = document.createElement('div');
+    hintsDisplay.className = 'hints-display';
+    hintsDisplay.textContent = 'Hints: 0';
+    this.hintsElement = hintsDisplay;
+
     const timerDisplay = document.createElement('div');
     timerDisplay.className = 'timer-display';
     timerDisplay.textContent = '00:00';
@@ -235,6 +242,7 @@ export class GameScreen {
     this.settingsPath = path;
     this.settingsCircle = circle;
 
+    timerContainer.appendChild(hintsDisplay);
     timerContainer.appendChild(timerDisplay);
     timerContainer.appendChild(settingsBtn);
 
@@ -312,6 +320,10 @@ export class GameScreen {
       if (oldGridContainer) {
         const newGridContainer = this.createGrid(crossedOutCells);
         oldGridContainer.replaceWith(newGridContainer);
+        this.updateHints();
+        if (this.helpMode) {
+          this.highlightValidPairs();
+        }
       }
     }
   }
@@ -352,6 +364,10 @@ export class GameScreen {
         this.crossOutPair(cell1, cell2);
         this.totalMoves++;
         this.updateScore();
+        this.updateHints();
+        if (this.helpMode) {
+          this.highlightValidPairs();
+        }
         this.soundManager.playValidPair();
         this.checkGameEnd();
       } else {
@@ -532,6 +548,7 @@ export class GameScreen {
     cell1.element.classList.remove('selected');
     cell2.element.classList.remove('selected');
     cell1.element.classList.remove('has-number');
+    cell2.element.classList.remove('has-number');
 
     this.gameLogic.removePair(cell1.row, cell1.col, cell2.row, cell2.col);
 
@@ -691,6 +708,7 @@ export class GameScreen {
       { text: 'Mix', count: 5 },
       { text: 'Eraser', count: 5 },
       { text: 'Back', count: '∞' },
+      { text: 'Help', count: '∞' },
     ];
 
     helpers.forEach((helper) => {
@@ -710,14 +728,19 @@ export class GameScreen {
           } else if (helper.text === 'Back') {
             const backHandler = new BackHandler(this);
             backHandler.handle();
+            this.updateHints();
+          } else if (helper.text === 'Help') {
+            this.toggleHelpMode();
           } else if (helper.text === 'Mix') {
             const mixHandler = new MixHandler(this);
             mixHandler.handle();
+            this.updateHints();
             this.soundManager.playHelperUse();
             this.checkGameEnd();
           } else if (helper.text === 'Add Numbers') {
             const addNumbersHandler = new AddNumbersHandler(this);
             addNumbersHandler.handle();
+            this.updateHints();
             this.soundManager.playHelperUse();
             this.checkGameEnd();
           } else {
@@ -729,6 +752,9 @@ export class GameScreen {
       if (helper.text === 'Back' && (this.backUsed || !this.previousState)) {
         helperBtn.disabled = true;
         helperBtn.classList.add('disabled');
+      }
+      if (helper.text === 'Help') {
+        this.helpBtn = helperBtn;
       }
       rightControls.appendChild(helperBtn);
     });
@@ -743,8 +769,148 @@ export class GameScreen {
     }
   }
 
+  findValidPairs() {
+    const crossedOutPositions = this.getCrossedOutPositions();
+    const activeCells = [];
+
+    for (let row = 0; row < this.gameLogic.grid.length; row++) {
+      for (let col = 0; col < this.gameLogic.grid[row].length; col++) {
+        const cellValue = this.gameLogic.grid[row][col];
+        const posKey = `${row},${col}`;
+
+        if (cellValue === null) {
+          continue;
+        }
+
+        if (crossedOutPositions.has(posKey)) {
+          continue;
+        }
+
+        activeCells.push({ row, col, value: cellValue });
+      }
+    }
+
+    if (activeCells.length < 2) {
+      return [];
+    }
+
+    const usedCells = new Set();
+    const validPairs = [];
+
+    for (let i = 0; i < activeCells.length; i++) {
+      if (usedCells.has(i)) {
+        continue;
+      }
+
+      for (let j = i + 1; j < activeCells.length; j++) {
+        if (usedCells.has(j)) {
+          continue;
+        }
+
+        const cell1 = activeCells[i];
+        const cell2 = activeCells[j];
+
+        const value1 = this.gameLogic.grid[cell1.row][cell1.col];
+        const value2 = this.gameLogic.grid[cell2.row][cell2.col];
+
+        if (value1 === null || value2 === null) {
+          continue;
+        }
+
+        const pos1Key = `${cell1.row},${cell1.col}`;
+        const pos2Key = `${cell2.row},${cell2.col}`;
+
+        if (crossedOutPositions.has(pos1Key) || crossedOutPositions.has(pos2Key)) {
+          continue;
+        }
+
+        if (
+          this.gameLogic.isValidPair(
+            cell1.row,
+            cell1.col,
+            cell2.row,
+            cell2.col,
+            crossedOutPositions
+          )
+        ) {
+          validPairs.push([cell1, cell2]);
+          usedCells.add(i);
+          usedCells.add(j);
+          break;
+        }
+      }
+    }
+
+    return validPairs;
+  }
+
+  countValidMoves() {
+    return this.findValidPairs().length;
+  }
+
+  highlightValidPairs() {
+    this.clearHelpHighlight();
+    if (!this.helpMode) return;
+
+    this.findValidPairs().forEach(([cell1, cell2]) => {
+      const el1 = document.querySelector(`[data-row="${cell1.row}"][data-col="${cell1.col}"]`);
+      const el2 = document.querySelector(`[data-row="${cell2.row}"][data-col="${cell2.col}"]`);
+      if (el1 && !el1.classList.contains('crossed-out')) el1.classList.add('help-highlight');
+      if (el2 && !el2.classList.contains('crossed-out')) el2.classList.add('help-highlight');
+    });
+  }
+
+  clearHelpHighlight() {
+    const highlightedCells = document.querySelectorAll('.grid-cell.help-highlight');
+    highlightedCells.forEach((cell) => {
+      cell.classList.remove('help-highlight');
+    });
+  }
+
+  toggleHelpMode() {
+    this.helpMode = !this.helpMode;
+    if (this.helpMode) {
+      this.eraserMode = false;
+      const eraserBtn = document.querySelector('[data-helper-type="Eraser"]');
+      if (eraserBtn) {
+        eraserBtn.classList.remove('active');
+        const remaining = 5 - (this.helperCounts.eraser || 0);
+        eraserBtn.textContent = `Eraser (${remaining})`;
+      }
+      this.highlightValidPairs();
+      if (this.helpBtn) {
+        this.helpBtn.classList.add('active');
+        this.helpBtn.textContent = 'Cancel';
+      }
+    } else {
+      this.clearHelpHighlight();
+      if (this.helpBtn) {
+        this.helpBtn.classList.remove('active');
+        this.helpBtn.textContent = 'Help';
+      }
+    }
+  }
+
+  updateHints() {
+    if (!this.hintsElement) {
+      return;
+    }
+
+    const validMoves = this.countValidMoves();
+    const displayText = validMoves >= 6 ? '5+' : String(validMoves);
+    this.hintsElement.textContent = `Hints: ${displayText}`;
+  }
+
   toggleEraserMode() {
     this.eraserMode = !this.eraserMode;
+    if (this.eraserMode) {
+      this.helpMode = false;
+      this.clearHelpHighlight();
+      if (this.helpBtn) {
+        this.helpBtn.classList.remove('active');
+        this.helpBtn.textContent = 'Help';
+      }
+    }
     const eraserBtn = document.querySelector('[data-helper-type="Eraser"]');
     if (eraserBtn) {
       if (this.eraserMode) {
@@ -763,6 +929,10 @@ export class GameScreen {
     const eraserHandler = new EraserHandler(this);
     eraserHandler.handle(cell);
     this.toggleEraserMode();
+    this.updateHints();
+    if (this.helpMode) {
+      this.highlightValidPairs();
+    }
     this.soundManager.playHelperUse();
     this.checkGameEnd();
   }

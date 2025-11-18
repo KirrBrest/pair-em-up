@@ -533,6 +533,13 @@ body::before {
   margin-left: auto;
 }
 
+.hints-display {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-right: 5px;
+}
+
 .timer-display {
   font-size: 1.5rem;
   font-weight: bold;
@@ -699,6 +706,43 @@ body::before {
   cursor: default;
 }
 
+.grid-cell.help-highlight {
+  background: #ffeb3b;
+  border: 2px solid #f57f17;
+  box-shadow: 0 0 10px rgba(255, 235, 59, 0.6);
+  animation: help-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes help-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 235, 59, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 235, 59, 0.9);
+  }
+}
+
+.dark-theme .grid-cell.help-highlight {
+  background: #ffa726;
+  border: 2px solid #ff6f00;
+  box-shadow: 0 0 10px rgba(255, 167, 38, 0.6);
+}
+
+.dark-theme .grid-cell.help-highlight {
+  animation: help-pulse-dark 1.5s ease-in-out infinite;
+}
+
+@keyframes help-pulse-dark {
+  0%,
+  100% {
+    box-shadow: 0 0 10px rgba(255, 167, 38, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 167, 38, 0.9);
+  }
+}
+
 .control-btn {
   padding: 10px 20px;
   font-size: 0.9rem;
@@ -792,6 +836,10 @@ body::before {
   .timer-container {
     margin-left: 0;
     justify-content: flex-start;
+  }
+
+  .hints-display {
+    font-size: 0.9rem;
   }
 
   .timer-display {

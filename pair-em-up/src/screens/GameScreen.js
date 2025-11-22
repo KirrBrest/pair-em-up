@@ -961,7 +961,7 @@ export class GameScreen {
     this.checkGameEnd();
   }
 
-  updateHelperButton(helperName, remaining) {
+  updateHelperButton(helperName, remaining, baseText = null) {
     const helperBtn = document.querySelector(`[data-helper-type="${helperName}"]`);
     if (helperBtn) {
       if (remaining <= 0) {
@@ -971,15 +971,17 @@ export class GameScreen {
         helperBtn.disabled = false;
         helperBtn.classList.remove('disabled');
       }
-      const keyMap = {
-        AddNumbers: 'addNumbers',
-        Mix: 'mix',
-        Eraser: 'eraser',
-        Back: 'back',
-        Help: 'help',
-      };
-      const key = keyMap[helperName] || helperName.toLowerCase();
-      const baseText = languageManager.t(key);
+      if (baseText === null) {
+        const keyMap = {
+          AddNumbers: 'addNumbers',
+          Mix: 'mix',
+          Eraser: 'eraser',
+          Back: 'back',
+          Help: 'help',
+        };
+        const key = keyMap[helperName] || helperName.toLowerCase();
+        baseText = languageManager.t(key);
+      }
       helperBtn.textContent = `${baseText} (${remaining})`;
     }
   }
@@ -1003,14 +1005,29 @@ export class GameScreen {
   }
 
   recreateGameScreen() {
+    const crossedOutCells = [];
+    const gridCells = document.querySelectorAll('.grid-cell.crossed-out');
+    gridCells.forEach((cell) => {
+      const row = parseInt(cell.dataset.row);
+      const col = parseInt(cell.dataset.col);
+      const value = cell.textContent.trim();
+      if (!isNaN(row) && !isNaN(col) && row >= 0 && col >= 0 && value && value !== '') {
+        crossedOutCells.push({ row, col, value: parseInt(value) || value });
+      }
+    });
+
     const appWrapper = document.querySelector('.app-wrapper');
     while (appWrapper.firstChild) {
       appWrapper.removeChild(appWrapper.firstChild);
     }
     this.createGameScreen();
-    this.recreateGrid();
+    this.recreateGrid(crossedOutCells);
     this.updateScore();
     this.updateHints();
+    this.updateAllHelperButtons();
+    if (this.helpMode) {
+      this.highlightValidPairs();
+    }
   }
 
   updateAllHelperButtons() {
@@ -1019,6 +1036,7 @@ export class GameScreen {
       { key: 'mix', text: languageManager.t('mix'), count: 5 },
       { key: 'eraser', text: languageManager.t('eraser'), count: 5 },
       { key: 'back', text: languageManager.t('back'), count: '∞' },
+      { key: 'help', text: languageManager.t('help'), count: '∞' },
     ];
 
     helpers.forEach((helper) => {
@@ -1026,7 +1044,15 @@ export class GameScreen {
       if (helper.count === '∞') {
         const helperBtn = document.querySelector(`[data-helper-type="${helperType}"]`);
         if (helperBtn) {
-          helperBtn.textContent = helper.text;
+          if (helper.key === 'help' && this.helpMode) {
+            helperBtn.textContent = languageManager.t('cancel');
+            helperBtn.classList.add('active');
+          } else {
+            helperBtn.textContent = helper.text;
+            if (helper.key !== 'help' || !this.helpMode) {
+              helperBtn.classList.remove('active');
+            }
+          }
           if (helper.key === 'back') {
             if (this.backUsed || !this.previousState) {
               helperBtn.disabled = true;
@@ -1037,13 +1063,15 @@ export class GameScreen {
             }
           } else {
             helperBtn.disabled = false;
-            helperBtn.classList.remove('disabled', 'active');
+            if (helper.key !== 'help' || !this.helpMode) {
+              helperBtn.classList.remove('disabled');
+            }
           }
         }
       } else {
         const used = this.helperCounts[helper.key] || 0;
         const remaining = helper.count - used;
-        this.updateHelperButton(helperType, remaining);
+        this.updateHelperButton(helperType, remaining, helper.text);
 
         if (helper.key === 'eraser' && this.eraserMode) {
           const eraserBtn = document.querySelector(`[data-helper-type="Eraser"]`);

@@ -9,7 +9,7 @@ export class AddNumbersHandler {
       this.gameScreen.helperCounts = {};
     }
 
-    const currentUses = this.gameScreen.helperCounts.addnumbers || 0;
+    const currentUses = this.gameScreen.helperCounts.addNumbers || 0;
 
     if (currentUses >= this.maxUses) {
       return;
@@ -104,9 +104,13 @@ export class AddNumbersHandler {
       currentColIndex++;
     }
 
-    this.gameScreen.helperCounts.addnumbers = currentUses + 1;
-    const remaining = this.maxUses - this.gameScreen.helperCounts.addnumbers;
-    this.gameScreen.updateHelperButton('Add Numbers', remaining);
+    this.gameScreen.helperCounts.addNumbers = currentUses + 1;
+    const remaining = this.maxUses - this.gameScreen.helperCounts.addNumbers;
+    this.gameScreen.updateHelperButton('AddNumbers', remaining);
+    this.gameScreen.updateHints();
+    if (this.gameScreen.helpMode) {
+      this.gameScreen.highlightValidPairs();
+    }
     this.gameScreen.backUsed = false;
     this.gameScreen.setBackButtonDisabled(false);
 

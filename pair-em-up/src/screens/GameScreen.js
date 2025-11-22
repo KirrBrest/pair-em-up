@@ -37,7 +37,7 @@ export class GameScreen {
     this.musicManager = new MusicManager();
     this.totalMoves = 0;
     this.gameEnded = false;
-    this.playToEnd = false;
+    this.playToEnd = options.playToEnd || false;
     this.init();
   }
 
@@ -625,8 +625,8 @@ export class GameScreen {
       }
 
       const endChecker = new GameEndChecker(this.gameLogic, this.helperCounts, this.playToEnd);
-      const won = endChecker.checkWin();
       const lost = endChecker.checkLoss();
+      const won = lost ? false : endChecker.checkWin();
 
       if (won || lost) {
         this.gameEnded = true;

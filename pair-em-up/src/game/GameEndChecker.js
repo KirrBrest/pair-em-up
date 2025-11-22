@@ -30,21 +30,24 @@ export class GameEndChecker {
   }
 
   checkLoss() {
-    const maxRowsReached = this.gameLogic.grid.length >= 50;
-    if (maxRowsReached) {
-      return true;
+    if (!this.playToEnd) {
+      const maxRowsReached = this.gameLogic.grid.length >= 50;
+      if (maxRowsReached) {
+        return true;
+      }
     }
 
     const allHelpersUsed =
       (this.helperCounts.eraser || 0) >= 5 &&
       (this.helperCounts.mix || 0) >= 5 &&
-      (this.helperCounts.addnumbers || 0) >= 10;
+      (this.helperCounts.addNumbers || 0) >= 10;
 
     if (!allHelpersUsed) {
       return false;
     }
 
-    return !this.hasValidMoves();
+    const hasMoves = this.hasValidMoves();
+    return !hasMoves;
   }
 
   hasValidMoves() {

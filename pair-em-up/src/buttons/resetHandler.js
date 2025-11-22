@@ -11,7 +11,7 @@ export class ResetHandler {
     this.gameScreen.helperCounts = {
       eraser: 0,
       mix: 0,
-      addNumbers: 0,
+      addnumbers: 0,
     };
     this.gameScreen.eraserMode = false;
     this.gameScreen.previousState = null;

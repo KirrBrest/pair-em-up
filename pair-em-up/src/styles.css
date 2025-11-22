@@ -192,16 +192,47 @@ body::before {
     border-color 0.3s ease;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
 .game-title {
   font-weight: bold;
   color: var(--text-color);
-  margin-bottom: 10px;
+  margin-bottom: 0;
   text-decoration: underline;
   text-decoration-color: #3498db;
   text-underline-offset: 5px;
   transform: rotate(-1deg);
   display: inline-block;
   font-size: 2rem;
+}
+
+.language-toggle-btn {
+  background: var(--button-bg);
+  color: var(--button-text);
+  border: 1px solid var(--button-border);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+}
+
+.language-toggle-btn:hover {
+  background: var(--button-hover);
+  transform: scale(1.05);
+}
+
+.language-toggle-btn:active {
+  transform: scale(0.95);
 }
 
 .author-credit {
@@ -932,6 +963,75 @@ body::before {
   width: 90%;
   text-align: center;
   transition: background-color 0.3s ease;
+}
+
+.instructions-modal {
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.instructions-container {
+  text-align: left;
+  padding: 20px 0;
+}
+
+.instructions-container h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--text-color);
+  font-weight: bold;
+}
+
+.instructions-container p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  white-space: pre-line;
+  margin-bottom: 0;
+}
+
+.instruction-section {
+  margin-bottom: 25px;
+}
+
+.instruction-section-title {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  color: var(--text-color);
+  font-weight: bold;
+}
+
+.instruction-section-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  white-space: pre-line;
+}
+
+.number-selection-modal {
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+}
+
+.number-selection-title {
+  margin: 0 0 20px 0;
+  font-family: 'Comic Sans MS', cursive;
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.number-selection-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.digit-selection-btn {
+  font-size: 1.5rem;
+  padding: 15px;
 }
 
 .modal-title {

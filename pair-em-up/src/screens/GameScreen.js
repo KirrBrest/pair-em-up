@@ -15,6 +15,7 @@ import { GameEndChecker } from '../game/GameEndChecker.js';
 import { ResultsManager } from '../results/ResultsManager.js';
 import { GameResultsModal } from '../results/GameResultsModal.js';
 import { ThemeManager } from '../utils/ThemeManager.js';
+import { languageManager } from '../utils/LanguageManager.js';
 
 export class GameScreen {
   constructor(mode, options = {}) {
@@ -26,7 +27,7 @@ export class GameScreen {
     this.helperCounts = {
       eraser: 0,
       mix: 0,
-      addnumbers: 0,
+      addNumbers: 0,
     };
     this.eraserMode = false;
     this.helpMode = false;
@@ -111,7 +112,7 @@ export class GameScreen {
     header.className = 'game-header';
 
     const homeBtn = Button.create({
-      text: 'Home',
+      text: languageManager.t('home'),
       className: 'control-btn home-btn',
       onClick: () => {
         this.goToStartScreen();
@@ -123,14 +124,14 @@ export class GameScreen {
 
     const currentScore = document.createElement('span');
     currentScore.className = 'current-score';
-    currentScore.appendChild(document.createTextNode('Score: '));
+    currentScore.appendChild(document.createTextNode(`${languageManager.t('score')}: `));
     const currentScoreStrong = document.createElement('strong');
     currentScoreStrong.textContent = this.gameLogic.score;
     currentScore.appendChild(currentScoreStrong);
 
     const targetScore = document.createElement('span');
     targetScore.className = 'target-score';
-    targetScore.appendChild(document.createTextNode('Target: '));
+    targetScore.appendChild(document.createTextNode(`${languageManager.t('target')}: `));
     const targetScoreStrong = document.createElement('strong');
     targetScoreStrong.textContent = this.gameLogic.targetScore;
     targetScore.appendChild(targetScoreStrong);
@@ -146,7 +147,7 @@ export class GameScreen {
     });
     this.playToEndCheckbox = playToEndCheckbox;
     playToEndLabel.appendChild(playToEndCheckbox);
-    playToEndLabel.appendChild(document.createTextNode(' Play to end'));
+    playToEndLabel.appendChild(document.createTextNode(` ${languageManager.t('playToEnd')}`));
 
     scoreDisplay.appendChild(currentScore);
     scoreDisplay.appendChild(targetScore);
@@ -154,7 +155,7 @@ export class GameScreen {
 
     const hintsDisplay = document.createElement('div');
     hintsDisplay.className = 'hints-display';
-    hintsDisplay.textContent = 'Hints: 0';
+    hintsDisplay.textContent = `${languageManager.t('hints')}: 0`;
     this.hintsElement = hintsDisplay;
 
     const timerDisplay = document.createElement('div');
@@ -450,7 +451,7 @@ export class GameScreen {
 
     const title = document.createElement('h2');
     title.className = 'modal-title';
-    title.textContent = 'Settings';
+    title.textContent = languageManager.t('settings');
 
     const settingsContainer = document.createElement('div');
     settingsContainer.className = 'settings-container';
@@ -460,18 +461,17 @@ export class GameScreen {
 
     const audioLabel = document.createElement('span');
     audioLabel.className = 'setting-label';
-    audioLabel.textContent = 'Audio';
+    audioLabel.textContent = languageManager.t('audio');
 
     const audioToggle = document.createElement('button');
     audioToggle.className = 'control-btn setting-toggle';
     const audioEnabled = localStorage.getItem('pairEmUpAudio') !== 'false';
-    audioToggle.textContent = audioEnabled ? 'ON' : 'OFF';
+    audioToggle.textContent = audioEnabled ? languageManager.t('on') : languageManager.t('off');
     audioToggle.addEventListener('click', () => {
       const currentState = localStorage.getItem('pairEmUpAudio') !== 'false';
       const newState = !currentState;
       localStorage.setItem('pairEmUpAudio', String(newState));
-      audioToggle.textContent = newState ? 'ON' : 'OFF';
-      console.log('Audio toggle clicked');
+      audioToggle.textContent = newState ? languageManager.t('on') : languageManager.t('off');
     });
 
     audioContainer.appendChild(audioLabel);
@@ -482,7 +482,7 @@ export class GameScreen {
 
     const musicLabel = document.createElement('span');
     musicLabel.className = 'setting-label';
-    musicLabel.textContent = 'Music';
+    musicLabel.textContent = languageManager.t('music');
 
     const musicCheckbox = document.createElement('input');
     musicCheckbox.type = 'checkbox';
@@ -505,15 +505,17 @@ export class GameScreen {
 
     const themeLabel = document.createElement('span');
     themeLabel.className = 'setting-label';
-    themeLabel.textContent = 'Theme';
+    themeLabel.textContent = languageManager.t('theme');
 
     const themeToggle = document.createElement('button');
     themeToggle.className = 'control-btn setting-toggle';
     const themeMode = ThemeManager.getCurrentTheme();
-    themeToggle.textContent = themeMode === 'dark' ? 'Dark' : 'Light';
+    themeToggle.textContent =
+      themeMode === 'dark' ? languageManager.t('dark') : languageManager.t('light');
     themeToggle.addEventListener('click', () => {
       const newTheme = ThemeManager.toggleTheme();
-      themeToggle.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+      themeToggle.textContent =
+        newTheme === 'dark' ? languageManager.t('dark') : languageManager.t('light');
       this.updateSettingsIcon();
       this.updateButtons();
     });
@@ -521,9 +523,32 @@ export class GameScreen {
     themeContainer.appendChild(themeLabel);
     themeContainer.appendChild(themeToggle);
 
+    const languageContainer = document.createElement('div');
+    languageContainer.className = 'setting-item';
+
+    const languageLabel = document.createElement('span');
+    languageLabel.className = 'setting-label';
+    languageLabel.textContent = languageManager.t('language');
+
+    const languageToggle = document.createElement('button');
+    languageToggle.className = 'control-btn setting-toggle';
+    const currentLang = languageManager.getLanguage();
+    languageToggle.textContent =
+      currentLang === 'ru' ? languageManager.t('english') : languageManager.t('russian');
+    languageToggle.addEventListener('click', () => {
+      const newLang = currentLang === 'en' ? 'ru' : 'en';
+      languageManager.setLanguage(newLang);
+      document.body.removeChild(modal);
+      this.recreateGameScreen();
+    });
+
+    languageContainer.appendChild(languageLabel);
+    languageContainer.appendChild(languageToggle);
+
     settingsContainer.appendChild(audioContainer);
     settingsContainer.appendChild(musicContainer);
     settingsContainer.appendChild(themeContainer);
+    settingsContainer.appendChild(languageContainer);
 
     modalContent.appendChild(title);
     modalContent.appendChild(settingsContainer);
@@ -658,7 +683,7 @@ export class GameScreen {
 
     const resetHandler = new ResetHandler(this);
     const resetBtn = Button.create({
-      text: 'Reset',
+      text: languageManager.t('reset'),
       className: 'control-btn reset-btn',
       onClick: () => {
         resetHandler.handle();
@@ -667,7 +692,7 @@ export class GameScreen {
 
     const saveHandler = new SaveHandler(this);
     const saveBtn = Button.create({
-      text: 'Save Game',
+      text: languageManager.t('saveGame'),
       className: 'control-btn save-btn',
       onClick: () => {
         saveHandler.handle();
@@ -682,7 +707,7 @@ export class GameScreen {
       continueHandler.handle();
     };
     const continueBtn = Button.create({
-      text: 'Continue Game',
+      text: languageManager.t('continueGame'),
       className: 'control-btn continue-btn',
       onClick: null,
       disabled: !hasSavedGame,
@@ -704,18 +729,17 @@ export class GameScreen {
     rightControls.className = 'right-controls';
 
     const helpers = [
-      { text: 'Add Numbers', count: 10 },
-      { text: 'Mix', count: 5 },
-      { text: 'Eraser', count: 5 },
-      { text: 'Back', count: '∞' },
-      { text: 'Help', count: '∞' },
+      { key: 'addNumbers', text: languageManager.t('addNumbers'), count: 10 },
+      { key: 'mix', text: languageManager.t('mix'), count: 5 },
+      { key: 'eraser', text: languageManager.t('eraser'), count: 5 },
+      { key: 'back', text: languageManager.t('back'), count: '∞' },
+      { key: 'help', text: languageManager.t('help'), count: '∞' },
     ];
 
     helpers.forEach((helper) => {
       let buttonText = helper.text;
       if (helper.count !== '∞') {
-        const key = helper.text.toLowerCase().replace(' ', '');
-        const used = this.helperCounts[key] || 0;
+        const used = this.helperCounts[helper.key] || 0;
         const remaining = helper.count - used;
         buttonText = `${helper.text} (${remaining})`;
       }
@@ -723,21 +747,21 @@ export class GameScreen {
         text: buttonText,
         className: 'control-btn helper-btn',
         onClick: () => {
-          if (helper.text === 'Eraser') {
+          if (helper.key === 'eraser') {
             this.toggleEraserMode();
-          } else if (helper.text === 'Back') {
+          } else if (helper.key === 'back') {
             const backHandler = new BackHandler(this);
             backHandler.handle();
             this.updateHints();
-          } else if (helper.text === 'Help') {
+          } else if (helper.key === 'help') {
             this.toggleHelpMode();
-          } else if (helper.text === 'Mix') {
+          } else if (helper.key === 'mix') {
             const mixHandler = new MixHandler(this);
             mixHandler.handle();
             this.updateHints();
             this.soundManager.playHelperUse();
             this.checkGameEnd();
-          } else if (helper.text === 'Add Numbers') {
+          } else if (helper.key === 'addNumbers') {
             const addNumbersHandler = new AddNumbersHandler(this);
             addNumbersHandler.handle();
             this.updateHints();
@@ -748,12 +772,12 @@ export class GameScreen {
           }
         },
       });
-      helperBtn.dataset.helperType = helper.text;
-      if (helper.text === 'Back' && (this.backUsed || !this.previousState)) {
+      helperBtn.dataset.helperType = helper.key.charAt(0).toUpperCase() + helper.key.slice(1);
+      if (helper.key === 'back' && (this.backUsed || !this.previousState)) {
         helperBtn.disabled = true;
         helperBtn.classList.add('disabled');
       }
-      if (helper.text === 'Help') {
+      if (helper.key === 'help') {
         this.helpBtn = helperBtn;
       }
       rightControls.appendChild(helperBtn);
@@ -875,18 +899,18 @@ export class GameScreen {
       if (eraserBtn) {
         eraserBtn.classList.remove('active');
         const remaining = 5 - (this.helperCounts.eraser || 0);
-        eraserBtn.textContent = `Eraser (${remaining})`;
+        eraserBtn.textContent = `${languageManager.t('eraser')} (${remaining})`;
       }
       this.highlightValidPairs();
       if (this.helpBtn) {
         this.helpBtn.classList.add('active');
-        this.helpBtn.textContent = 'Cancel';
+        this.helpBtn.textContent = languageManager.t('cancel');
       }
     } else {
       this.clearHelpHighlight();
       if (this.helpBtn) {
         this.helpBtn.classList.remove('active');
-        this.helpBtn.textContent = 'Help';
+        this.helpBtn.textContent = languageManager.t('help');
       }
     }
   }
@@ -898,7 +922,7 @@ export class GameScreen {
 
     const validMoves = this.countValidMoves();
     const displayText = validMoves >= 6 ? '5+' : String(validMoves);
-    this.hintsElement.textContent = `Hints: ${displayText}`;
+    this.hintsElement.textContent = `${languageManager.t('hints')}: ${displayText}`;
   }
 
   toggleEraserMode() {
@@ -908,7 +932,7 @@ export class GameScreen {
       this.clearHelpHighlight();
       if (this.helpBtn) {
         this.helpBtn.classList.remove('active');
-        this.helpBtn.textContent = 'Help';
+        this.helpBtn.textContent = languageManager.t('help');
       }
     }
     const eraserBtn = document.querySelector('[data-helper-type="Eraser"]');
@@ -916,11 +940,11 @@ export class GameScreen {
       if (this.eraserMode) {
         eraserBtn.classList.add('active');
         const remaining = 5 - (this.helperCounts.eraser || 0);
-        eraserBtn.textContent = `Cancel (${remaining})`;
+        eraserBtn.textContent = `${languageManager.t('cancel')} (${remaining})`;
       } else {
         eraserBtn.classList.remove('active');
         const remaining = 5 - (this.helperCounts.eraser || 0);
-        eraserBtn.textContent = `Eraser (${remaining})`;
+        eraserBtn.textContent = `${languageManager.t('eraser')} (${remaining})`;
       }
     }
   }
@@ -947,7 +971,15 @@ export class GameScreen {
         helperBtn.disabled = false;
         helperBtn.classList.remove('disabled');
       }
-      const baseText = helperName === 'Eraser' ? 'Eraser' : helperName;
+      const keyMap = {
+        AddNumbers: 'addNumbers',
+        Mix: 'mix',
+        Eraser: 'eraser',
+        Back: 'back',
+        Help: 'help',
+      };
+      const key = keyMap[helperName] || helperName.toLowerCase();
+      const baseText = languageManager.t(key);
       helperBtn.textContent = `${baseText} (${remaining})`;
     }
   }
@@ -970,20 +1002,32 @@ export class GameScreen {
     }
   }
 
+  recreateGameScreen() {
+    const appWrapper = document.querySelector('.app-wrapper');
+    while (appWrapper.firstChild) {
+      appWrapper.removeChild(appWrapper.firstChild);
+    }
+    this.createGameScreen();
+    this.recreateGrid();
+    this.updateScore();
+    this.updateHints();
+  }
+
   updateAllHelperButtons() {
     const helpers = [
-      { text: 'Add Numbers', count: 10 },
-      { text: 'Mix', count: 5 },
-      { text: 'Eraser', count: 5 },
-      { text: 'Back', count: '∞' },
+      { key: 'addNumbers', text: languageManager.t('addNumbers'), count: 10 },
+      { key: 'mix', text: languageManager.t('mix'), count: 5 },
+      { key: 'eraser', text: languageManager.t('eraser'), count: 5 },
+      { key: 'back', text: languageManager.t('back'), count: '∞' },
     ];
 
     helpers.forEach((helper) => {
+      const helperType = helper.key.charAt(0).toUpperCase() + helper.key.slice(1);
       if (helper.count === '∞') {
-        const helperBtn = document.querySelector(`[data-helper-type="${helper.text}"]`);
+        const helperBtn = document.querySelector(`[data-helper-type="${helperType}"]`);
         if (helperBtn) {
           helperBtn.textContent = helper.text;
-          if (helper.text === 'Back') {
+          if (helper.key === 'back') {
             if (this.backUsed || !this.previousState) {
               helperBtn.disabled = true;
               helperBtn.classList.add('disabled');
@@ -997,16 +1041,15 @@ export class GameScreen {
           }
         }
       } else {
-        const key = helper.text.toLowerCase().replace(' ', '');
-        const used = this.helperCounts[key] || 0;
+        const used = this.helperCounts[helper.key] || 0;
         const remaining = helper.count - used;
-        this.updateHelperButton(helper.text, remaining);
+        this.updateHelperButton(helperType, remaining);
 
-        if (helper.text === 'Eraser' && this.eraserMode) {
+        if (helper.key === 'eraser' && this.eraserMode) {
           const eraserBtn = document.querySelector(`[data-helper-type="Eraser"]`);
           if (eraserBtn) {
             eraserBtn.classList.remove('active');
-            eraserBtn.textContent = `Eraser (${remaining})`;
+            eraserBtn.textContent = `${helper.text} (${remaining})`;
           }
           this.eraserMode = false;
         }

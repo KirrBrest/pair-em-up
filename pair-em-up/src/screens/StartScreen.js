@@ -3,6 +3,7 @@ import { GameScreen } from './GameScreen.js';
 import { AutoLoadHandler } from '../buttons/autoLoadHandler.js';
 import { ResultsManager } from '../results/ResultsManager.js';
 import { ThemeManager } from '../utils/ThemeManager.js';
+import { languageManager } from '../utils/LanguageManager.js';
 
 export class StartScreen {
   constructor() {
@@ -21,9 +22,30 @@ export class StartScreen {
     const startScreen = document.createElement('div');
     startScreen.className = 'start-screen';
 
+    const titleContainer = document.createElement('div');
+    titleContainer.className = 'title-container';
+
     const title = document.createElement('h1');
     title.className = 'game-title';
-    title.textContent = "Pair 'em Up";
+    title.textContent = languageManager.t('gameTitle');
+
+    const languageBtn = document.createElement('button');
+    languageBtn.className = 'language-toggle-btn';
+    const currentLang = languageManager.getLanguage();
+    languageBtn.textContent = currentLang === 'ru' ? 'EN' : 'RU';
+    languageBtn.title = currentLang === 'ru' ? 'Switch to English' : 'Переключить на русский';
+    languageBtn.addEventListener('click', () => {
+      const newLang = currentLang === 'en' ? 'ru' : 'en';
+      languageManager.setLanguage(newLang);
+      const appWrapper = document.querySelector('.app-wrapper');
+      while (appWrapper.firstChild) {
+        appWrapper.removeChild(appWrapper.firstChild);
+      }
+      this.createStartScreen();
+    });
+
+    titleContainer.appendChild(title);
+    titleContainer.appendChild(languageBtn);
 
     const authorCredit = document.createElement('div');
     authorCredit.className = 'author-credit';
@@ -31,20 +53,20 @@ export class StartScreen {
     authorLink.href = 'https://github.com/KirrBrest';
     authorLink.target = '_blank';
     authorLink.textContent = 'KirrBrest';
-    authorCredit.appendChild(document.createTextNode('Created by '));
+    authorCredit.appendChild(document.createTextNode(`${languageManager.t('createdBy')} `));
     authorCredit.appendChild(authorLink);
 
     const modeSelection = document.createElement('div');
     modeSelection.className = 'mode-selection';
     const modeTitle = document.createElement('h2');
-    modeTitle.textContent = 'Select Game Mode';
+    modeTitle.textContent = languageManager.t('selectGameMode');
     modeSelection.appendChild(modeTitle);
 
     const modeButtons = document.createElement('div');
     modeButtons.className = 'mode-buttons';
 
     const classicBtn = Button.create({
-      text: 'Classic',
+      text: languageManager.t('classic'),
       className: 'mode-btn',
       onClick: () => {
         new GameScreen('classic');
@@ -52,7 +74,7 @@ export class StartScreen {
     });
 
     const randomBtn = Button.create({
-      text: 'Random',
+      text: languageManager.t('random'),
       className: 'mode-btn',
       onClick: () => {
         new GameScreen('random');
@@ -60,7 +82,7 @@ export class StartScreen {
     });
 
     const chaoticBtn = Button.create({
-      text: 'Chaotic',
+      text: languageManager.t('chaotic'),
       className: 'mode-btn',
       onClick: () => {
         new GameScreen('chaotic');
@@ -68,7 +90,7 @@ export class StartScreen {
     });
 
     const numberSelectionBtn = Button.create({
-      text: 'Number Selection',
+      text: languageManager.t('numberSelection'),
       className: 'mode-btn',
       onClick: () => {
         this.showNumberSelectionModal();
@@ -86,7 +108,7 @@ export class StartScreen {
 
     const hasSavedGame = this.checkForSavedGame();
     const continueBtn = Button.create({
-      text: 'Continue Game',
+      text: languageManager.t('continueGame'),
       className: 'action-btn continue-btn',
       onClick: hasSavedGame
         ? () => {
@@ -96,25 +118,33 @@ export class StartScreen {
       disabled: !hasSavedGame,
     });
     const settingsBtn = Button.create({
-      text: 'Settings',
+      text: languageManager.t('settings'),
       className: 'action-btn settings-btn',
       onClick: () => {
         this.showSettingsModal();
       },
     });
     const resultsBtn = Button.create({
-      text: 'Results',
+      text: languageManager.t('results'),
       className: 'action-btn results-btn',
       onClick: () => {
         this.showResultsTable();
+      },
+    });
+    const instructionsBtn = Button.create({
+      text: languageManager.t('instructions'),
+      className: 'action-btn instructions-btn',
+      onClick: () => {
+        this.showInstructionsModal();
       },
     });
 
     gameActions.appendChild(continueBtn);
     gameActions.appendChild(settingsBtn);
     gameActions.appendChild(resultsBtn);
+    gameActions.appendChild(instructionsBtn);
 
-    startScreen.appendChild(title);
+    startScreen.appendChild(titleContainer);
     startScreen.appendChild(authorCredit);
     startScreen.appendChild(modeSelection);
     startScreen.appendChild(gameActions);
@@ -153,7 +183,7 @@ export class StartScreen {
 
     const title = document.createElement('h2');
     title.className = 'modal-title';
-    title.textContent = 'Game Results';
+    title.textContent = languageManager.t('gameResults');
 
     const results = ResultsManager.getResults();
     const table = document.createElement('table');
@@ -162,11 +192,11 @@ export class StartScreen {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
-      <th>Mode</th>
-      <th>Score</th>
-      <th>Time</th>
-      <th>Moves</th>
-      <th>Result</th>
+      <th>${languageManager.t('mode')}</th>
+      <th>${languageManager.t('score')}</th>
+      <th>${languageManager.t('time')}</th>
+      <th>${languageManager.t('moves')}</th>
+      <th>${languageManager.t('result')}</th>
     `;
     thead.appendChild(headerRow);
     table.appendChild(thead);
@@ -176,7 +206,7 @@ export class StartScreen {
       const emptyRow = document.createElement('tr');
       const emptyCell = document.createElement('td');
       emptyCell.colSpan = 5;
-      emptyCell.textContent = 'No games completed yet';
+      emptyCell.textContent = languageManager.t('noGamesCompleted');
       emptyCell.className = 'empty-results';
       emptyRow.appendChild(emptyCell);
       tbody.appendChild(emptyRow);
@@ -194,7 +224,7 @@ export class StartScreen {
           <td>${result.finalScore}</td>
           <td>${result.completionTime}</td>
           <td>${result.totalMoves}</td>
-          <td>${result.won ? '⭐ Win' : 'Loss'}</td>
+          <td>${result.won ? `⭐ ${languageManager.t('win')}` : languageManager.t('loss')}</td>
         `;
         if (result.won) {
           row.classList.add('win-row');
@@ -205,7 +235,7 @@ export class StartScreen {
     table.appendChild(tbody);
 
     const closeBtn = Button.create({
-      text: 'Close',
+      text: languageManager.t('close'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -228,10 +258,10 @@ export class StartScreen {
 
   formatMode(mode) {
     const modeMap = {
-      classic: 'Classic',
-      random: 'Random',
-      chaotic: 'Chaotic',
-      numberSelection: 'Number Selection',
+      classic: languageManager.t('classic'),
+      random: languageManager.t('random'),
+      chaotic: languageManager.t('chaotic'),
+      numberSelection: languageManager.t('numberSelection'),
     };
     return modeMap[mode] || mode;
   }
@@ -245,7 +275,7 @@ export class StartScreen {
 
     const title = document.createElement('h2');
     title.className = 'modal-title';
-    title.textContent = 'Settings';
+    title.textContent = languageManager.t('settings');
 
     const settingsContainer = document.createElement('div');
     settingsContainer.className = 'settings-container';
@@ -255,17 +285,17 @@ export class StartScreen {
 
     const audioLabel = document.createElement('span');
     audioLabel.className = 'setting-label';
-    audioLabel.textContent = 'Audio';
+    audioLabel.textContent = languageManager.t('audio');
 
     const audioToggle = document.createElement('button');
     audioToggle.className = 'control-btn setting-toggle';
     const audioEnabled = localStorage.getItem('pairEmUpAudio') !== 'false';
-    audioToggle.textContent = audioEnabled ? 'ON' : 'OFF';
+    audioToggle.textContent = audioEnabled ? languageManager.t('on') : languageManager.t('off');
     audioToggle.addEventListener('click', () => {
       const currentState = localStorage.getItem('pairEmUpAudio') !== 'false';
       const newState = !currentState;
       localStorage.setItem('pairEmUpAudio', String(newState));
-      audioToggle.textContent = newState ? 'ON' : 'OFF';
+      audioToggle.textContent = newState ? languageManager.t('on') : languageManager.t('off');
     });
 
     audioContainer.appendChild(audioLabel);
@@ -276,7 +306,7 @@ export class StartScreen {
 
     const musicLabel = document.createElement('span');
     musicLabel.className = 'setting-label';
-    musicLabel.textContent = 'Music';
+    musicLabel.textContent = languageManager.t('music');
 
     const musicCheckbox = document.createElement('input');
     musicCheckbox.type = 'checkbox';
@@ -300,27 +330,56 @@ export class StartScreen {
 
     const themeLabel = document.createElement('span');
     themeLabel.className = 'setting-label';
-    themeLabel.textContent = 'Theme';
+    themeLabel.textContent = languageManager.t('theme');
 
     const themeToggle = document.createElement('button');
     themeToggle.className = 'control-btn setting-toggle';
     const themeMode = ThemeManager.getCurrentTheme();
-    themeToggle.textContent = themeMode === 'dark' ? 'Dark' : 'Light';
+    themeToggle.textContent =
+      themeMode === 'dark' ? languageManager.t('dark') : languageManager.t('light');
     themeToggle.addEventListener('click', () => {
       const newTheme = ThemeManager.toggleTheme();
-      themeToggle.textContent = newTheme === 'dark' ? 'Dark' : 'Light';
+      themeToggle.textContent =
+        newTheme === 'dark' ? languageManager.t('dark') : languageManager.t('light');
       this.updateButtons();
     });
 
     themeContainer.appendChild(themeLabel);
     themeContainer.appendChild(themeToggle);
 
+    const languageContainer = document.createElement('div');
+    languageContainer.className = 'setting-item';
+
+    const languageLabel = document.createElement('span');
+    languageLabel.className = 'setting-label';
+    languageLabel.textContent = languageManager.t('language');
+
+    const languageToggle = document.createElement('button');
+    languageToggle.className = 'control-btn setting-toggle';
+    const currentLang = languageManager.getLanguage();
+    languageToggle.textContent =
+      currentLang === 'ru' ? languageManager.t('english') : languageManager.t('russian');
+    languageToggle.addEventListener('click', () => {
+      const newLang = currentLang === 'en' ? 'ru' : 'en';
+      languageManager.setLanguage(newLang);
+      document.body.removeChild(modal);
+      const appWrapper = document.querySelector('.app-wrapper');
+      while (appWrapper.firstChild) {
+        appWrapper.removeChild(appWrapper.firstChild);
+      }
+      this.createStartScreen();
+    });
+
+    languageContainer.appendChild(languageLabel);
+    languageContainer.appendChild(languageToggle);
+
     settingsContainer.appendChild(audioContainer);
     settingsContainer.appendChild(musicContainer);
     settingsContainer.appendChild(themeContainer);
+    settingsContainer.appendChild(languageContainer);
 
     const closeBtn = Button.create({
-      text: 'Close',
+      text: languageManager.t('close'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -353,61 +412,26 @@ export class StartScreen {
   showNumberSelectionModal() {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
-    modal.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    `;
 
     const modalContent = document.createElement('div');
-    modalContent.className = 'modal-content';
-    modalContent.style.cssText = `
-      background-color: #f5f5dc;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-      max-width: 400px;
-      width: 90%;
-      text-align: center;
-    `;
+    modalContent.className = 'modal-content number-selection-modal';
 
     const title = document.createElement('h2');
-    title.textContent = 'Select a digit from 1 to 9';
-    title.style.cssText = `
-      margin: 0 0 20px 0;
-      font-family: 'Comic Sans MS', cursive;
-      font-size: 1.5rem;
-      color: #2c3e50;
-    `;
+    title.className = 'number-selection-title';
+    title.textContent = languageManager.t('selectDigitFrom1To9');
 
     const buttonsContainer = document.createElement('div');
-    buttonsContainer.style.cssText = `
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 20px;
-    `;
+    buttonsContainer.className = 'number-selection-buttons';
 
     for (let i = 1; i <= 9; i++) {
       const digitBtn = Button.create({
         text: String(i),
-        className: 'mode-btn',
+        className: 'mode-btn digit-selection-btn',
         onClick: () => {
           document.body.removeChild(modal);
           new GameScreen('numberSelection', { selectedDigit: i });
         },
       });
-      digitBtn.style.cssText = `
-        font-size: 1.5rem;
-        padding: 15px;
-      `;
       buttonsContainer.appendChild(digitBtn);
     }
 
@@ -455,5 +479,114 @@ export class StartScreen {
     backgroundText.appendChild(grade);
 
     body.appendChild(backgroundText);
+  }
+
+  showInstructionsModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content instructions-modal';
+
+    const title = document.createElement('h2');
+    title.className = 'modal-title';
+    title.textContent = languageManager.t('instructionsTitle');
+
+    const instructionsContainer = document.createElement('div');
+    instructionsContainer.className = 'instructions-container';
+
+    const createSection = (sectionTitle, sectionText) => {
+      const section = document.createElement('div');
+      section.className = 'instruction-section';
+
+      const sectionTitleEl = document.createElement('h3');
+      sectionTitleEl.className = 'instruction-section-title';
+      sectionTitleEl.textContent = sectionTitle;
+
+      const sectionTextEl = document.createElement('p');
+      sectionTextEl.className = 'instruction-section-text';
+      sectionTextEl.textContent = sectionText;
+
+      section.appendChild(sectionTitleEl);
+      section.appendChild(sectionTextEl);
+      return section;
+    };
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsGoal'),
+        languageManager.t('instructionsGoalText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsValidPairs'),
+        languageManager.t('instructionsValidPairsText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsPairRules'),
+        languageManager.t('instructionsPairRulesText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsGameModes'),
+        languageManager.t('instructionsGameModesText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsHelpers'),
+        languageManager.t('instructionsHelpersText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsControls'),
+        languageManager.t('instructionsControlsText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsWinConditions'),
+        languageManager.t('instructionsWinConditionsText')
+      )
+    );
+
+    instructionsContainer.appendChild(
+      createSection(
+        languageManager.t('instructionsLossConditions'),
+        languageManager.t('instructionsLossConditionsText')
+      )
+    );
+
+    const closeBtn = Button.create({
+      text: languageManager.t('close'),
+      className: 'action-btn',
+      onClick: () => {
+        document.body.removeChild(modal);
+      },
+    });
+
+    modalContent.appendChild(title);
+    modalContent.appendChild(instructionsContainer);
+    modalContent.appendChild(closeBtn);
+    modal.appendChild(modalContent);
+
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        document.body.removeChild(modal);
+      }
+    });
   }
 }

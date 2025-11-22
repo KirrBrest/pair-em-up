@@ -1,6 +1,7 @@
 import { Button } from '../components/Button.js';
 import { ResultsManager } from './ResultsManager.js';
 import { StartScreen } from '../screens/StartScreen.js';
+import { languageManager } from '../utils/LanguageManager.js';
 
 export class GameResultsModal {
   constructor(gameScreen, result) {
@@ -17,27 +18,29 @@ export class GameResultsModal {
 
     const title = document.createElement('h2');
     title.className = 'modal-title';
-    title.textContent = this.result.won ? 'Victory!' : 'Game Over';
+    title.textContent = this.result.won
+      ? languageManager.t('victory')
+      : languageManager.t('gameOver');
 
     const message = document.createElement('p');
     message.className = 'results-message';
     message.textContent = this.result.won
-      ? 'Congratulations! You reached the target score!'
-      : 'No more valid moves available.';
+      ? languageManager.t('congratulations')
+      : languageManager.t('noMoreMoves');
 
     const scoreInfo = document.createElement('div');
     scoreInfo.className = 'results-info';
     scoreInfo.innerHTML = `
       <div class="result-item">
-        <span class="result-label">Final Score:</span>
+        <span class="result-label">${languageManager.t('finalScore')}:</span>
         <span class="result-value">${this.result.finalScore}</span>
       </div>
       <div class="result-item">
-        <span class="result-label">Completion Time:</span>
+        <span class="result-label">${languageManager.t('completionTime')}:</span>
         <span class="result-value">${this.result.completionTime}</span>
       </div>
       <div class="result-item">
-        <span class="result-label">Total Moves:</span>
+        <span class="result-label">${languageManager.t('totalMoves')}:</span>
         <span class="result-value">${this.result.totalMoves}</span>
       </div>
     `;
@@ -46,7 +49,7 @@ export class GameResultsModal {
     buttonsContainer.className = 'results-buttons';
 
     const playAgainBtn = Button.create({
-      text: 'Play Again',
+      text: languageManager.t('playAgain'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -55,7 +58,7 @@ export class GameResultsModal {
     });
 
     const mainMenuBtn = Button.create({
-      text: 'Main Menu',
+      text: languageManager.t('mainMenu'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -68,7 +71,7 @@ export class GameResultsModal {
     });
 
     const viewResultsBtn = Button.create({
-      text: 'View Results',
+      text: languageManager.t('viewResults'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -91,6 +94,11 @@ export class GameResultsModal {
     modal.addEventListener('click', (e) => {
       if (e.target === modal) {
         document.body.removeChild(modal);
+        const appWrapper = document.querySelector('.app-wrapper');
+        while (appWrapper.firstChild) {
+          appWrapper.removeChild(appWrapper.firstChild);
+        }
+        new StartScreen();
       }
     });
   }
@@ -104,7 +112,7 @@ export class GameResultsModal {
 
     const title = document.createElement('h2');
     title.className = 'modal-title';
-    title.textContent = 'Game Results';
+    title.textContent = languageManager.t('gameResults');
 
     const results = ResultsManager.getResults();
     const table = document.createElement('table');
@@ -113,11 +121,11 @@ export class GameResultsModal {
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = `
-      <th>Mode</th>
-      <th>Score</th>
-      <th>Time</th>
-      <th>Moves</th>
-      <th>Result</th>
+      <th>${languageManager.t('mode')}</th>
+      <th>${languageManager.t('score')}</th>
+      <th>${languageManager.t('time')}</th>
+      <th>${languageManager.t('moves')}</th>
+      <th>${languageManager.t('result')}</th>
     `;
     thead.appendChild(headerRow);
     table.appendChild(thead);
@@ -127,7 +135,7 @@ export class GameResultsModal {
       const emptyRow = document.createElement('tr');
       const emptyCell = document.createElement('td');
       emptyCell.colSpan = 5;
-      emptyCell.textContent = 'No games completed yet';
+      emptyCell.textContent = languageManager.t('noGamesCompleted');
       emptyCell.className = 'empty-results';
       emptyRow.appendChild(emptyCell);
       tbody.appendChild(emptyRow);
@@ -145,7 +153,7 @@ export class GameResultsModal {
           <td>${result.finalScore}</td>
           <td>${result.completionTime}</td>
           <td>${result.totalMoves}</td>
-          <td>${result.won ? '⭐ Win' : 'Loss'}</td>
+          <td>${result.won ? `⭐ ${languageManager.t('win')}` : languageManager.t('loss')}</td>
         `;
         if (result.won) {
           row.classList.add('win-row');
@@ -156,7 +164,7 @@ export class GameResultsModal {
     table.appendChild(tbody);
 
     const closeBtn = Button.create({
-      text: 'Close',
+      text: languageManager.t('close'),
       className: 'action-btn',
       onClick: () => {
         document.body.removeChild(modal);
@@ -179,10 +187,10 @@ export class GameResultsModal {
 
   formatMode(mode) {
     const modeMap = {
-      classic: 'Classic',
-      random: 'Random',
-      chaotic: 'Chaotic',
-      numberSelection: 'Number Selection',
+      classic: languageManager.t('classic'),
+      random: languageManager.t('random'),
+      chaotic: languageManager.t('chaotic'),
+      numberSelection: languageManager.t('numberSelection'),
     };
     return modeMap[mode] || mode;
   }

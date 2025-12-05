@@ -5,8 +5,8 @@ on:
     branches:
       - pair-em-up
     paths:
-      - 'pair-em-up/**'
-      - '.github/workflows/deploy.yml'
+      - '**'
+      - '!.github/workflows/deploy.yml'
 
 permissions:
   contents: write
@@ -31,14 +31,12 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: pair-em-up/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: ./pair-em-up
         run: npm ci
 
       - name: Build
-        working-directory: ./pair-em-up
         run: npm run build
 
       - name: Checkout gh-pages
@@ -50,7 +48,7 @@ jobs:
       - name: Copy dist to gh-pages
         run: |
           mkdir -p gh-pages/pair-em-up
-          cp -r pair-em-up/dist/* gh-pages/pair-em-up/
+          cp -r dist/* gh-pages/pair-em-up/
           cd gh-pages/pair-em-up
           find . -name ".gitignore" -delete
           

@@ -1,3 +1,0 @@
-#!/bin/sh
-cd pair-em-up && npx --no -- commitlint --edit ${1}
-
